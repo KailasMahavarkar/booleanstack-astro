@@ -9,7 +9,7 @@ import AuthorList from "@src/components/post/author-list.astro";
 		authors={posts.map((post) => post.data.author)}
 		authorLinkedIns={posts
 			.map((post) => post.data.authorLinkedIn)
-			.filter((linkedIn) => linkedIn !== undefined)}
+			.filter((linkedIn): linkedIn is string => linkedIn !== undefined)}
 		authorUsernames={posts.map((post) => post.data.authorUsername)}
 	/>
 </Layout>

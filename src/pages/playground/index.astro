@@ -1,0 +1,11 @@
+---
+import Layout from "@components/layout.astro";
+import PlatformEntry from '../../platform';
+import "@src/styles/global.css";
+---
+
+<Layout fullWidth={true} showFooter={false}>
+    <div class="min-h-screen bg-base-100">
+        <PlatformEntry client:load />
+    </div>
+</Layout>

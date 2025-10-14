@@ -14,6 +14,7 @@ module.exports = {
 	content: [
         "./src/**/*.{astro,mdx,ts,tsx}",
         "./src/components/canvas/BaseCanvas.tsx",
+        "./src/platform/**/*.{ts,tsx}",
     ],
 	theme: {
 		extend: {

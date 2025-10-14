@@ -83,7 +83,7 @@ const { isTabHeaderVisible = true } = Astro.props;
 	</div>
 </div>
 
-<script define:vars={{ componentId }}>
+<script is:inline define:vars={{ componentId }}>
 	(() => {
 		// Get the specific component container
 		const container = document.getElementById(componentId);
