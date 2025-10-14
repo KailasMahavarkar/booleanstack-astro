@@ -1,0 +1,63 @@
+pre {
+	@apply bg-base-200 text-base-content rounded-md p-2 overflow-x-auto border-2;
+}
+
+pre code {
+	@apply font-mono text-sm text-base-content;
+}
+
+hr {
+	@apply border-t border-base-300 my-6;
+}
+
+img {
+	@apply rounded-md shadow-md mt-4 mb-4;
+}
+
+li > code {
+	@apply rounded-none;
+}
+
+.code-display > * > pre {
+	@apply border-none;
+}
+
+h2 {
+	@apply mb-1 mt-1;
+}
+
+.prose :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+	@apply my-0;
+}
+
+.code-tabs {
+	@apply mt-2;
+}
+
+.prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+	@apply my-2;
+}
+
+.prose :where(ol):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+	@apply my-0;
+}
+
+.prose :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+	@apply mt-4 mb-2;
+}
+
+img[src="/resource_unavailable.svg"] {
+	@apply shadow-none dark:bg-[var(--tw-prose-headings)] p-3;
+}
+
+.single-img {
+	@apply rounded-md dark:border-transparent border-[1px] mt-4 mb-4;
+}
+
+.prose :where(ul):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+	@apply my-0;
+}
+
+.old-paper > h3{
+    @apply mt-0 dark:text-black;
+}

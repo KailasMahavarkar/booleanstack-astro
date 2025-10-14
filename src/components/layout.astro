@@ -1,0 +1,41 @@
+---
+import { SITE_DESCRIPTION, SITE_TITLE } from "@src/config";
+import Footer from "./footer.astro";
+import Header from "./header.astro";
+import Meta from "./meta.astro";
+import ThemeProvider from "./theme-provider.astro";
+
+type Props = {
+	title?: string;
+	description?: string;
+	fullWidth?: boolean;
+    showFooter?: boolean;
+    bodyClassName?: string;
+};
+
+const { title, description, fullWidth = false, showFooter = true, bodyClassName = "" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<Meta
+			title={title ? `${title} · ${SITE_TITLE}` : SITE_TITLE}
+			description={description ?? SITE_DESCRIPTION}
+		/>
+	</head>
+	<body class={`flex flex-col h-full w-full overflow-y-scroll antialiased ${bodyClassName}`}>
+		<ThemeProvider />
+		<Header />
+		{
+			fullWidth ? (
+				<slot />
+			) : (
+				<div class="flex-auto prose max-w-none">
+					<slot />
+				</div>
+			)
+		}
+		{showFooter && <Footer />}
+	</body>
+</html>

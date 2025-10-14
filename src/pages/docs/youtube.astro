@@ -1,0 +1,41 @@
+---
+import { YouTube } from "astro-embed";
+import CodeTabs from "@components/code-tabs.astro";
+import { injectCode } from "@src/utils/blog-utils";
+---
+
+<div class="max-w-container mx-auto px-4">
+	<YouTube
+		id="FfTT7mxGw8I"
+		params="start=19&end=22&autoplay=1"
+		title="Just Curious - Limmy's Homemade Show"
+	/>
+	<CodeTabs
+		tabs={{
+			html: injectCode(`
+            <YouTube title="Just Curious - Limmy's Homemade Show" videoId="FfTT7mxGw8I" />;
+
+            <div class="my-8">Configure the embed features and thumbnail size:</div>
+
+            <YouTube
+                embedParams={{ start: 19, end: 22 }}
+                thumbnailRes="maxres"
+                title="Frimmerang"
+                videoId="xptCWoB_VCE"
+            />
+
+            <div class="my-8">
+                Pass other HTML attributes for the <code>&lt;iframe&gt;</code>:
+            </div>
+
+            <YouTube
+                class="rounded-2xl"
+                id="techno"
+                title="Limmy Teaches Techno - Limmy's Homemade Show"
+                videoId="L0C5nyOVTzc"
+            />
+
+        `),
+		}}
+	/>
+</div>

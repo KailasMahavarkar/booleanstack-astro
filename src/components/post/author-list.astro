@@ -1,0 +1,83 @@
+---
+import Avatar from "@src/helpers/avatar";
+
+type Props = {
+	authors: string[];
+	authorUsernames: string[];
+	authorLinkedIns?: string[];
+};
+
+const { authors, authorUsernames, authorLinkedIns = [] } = Astro.props;
+
+const avatars = [] as any[];
+
+for (let i = 0; i < authors.length; i++) {
+	const avatarInstance = new Avatar({
+		seed: authors[i],
+	});
+
+	const avatar = avatarInstance.render("w-12 h-12");
+	avatars.push(avatar);
+}
+---
+
+<div class="prose max-w-screen-lg mx-auto px-4 my-4">
+	<div class="overflow-x-auto">
+		<table class="table">
+			{/* head */}
+			<thead>
+				<tr>
+					<th>Author Name</th>
+					<th>Posts By Author</th>
+					<th>Author Social</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					authors.map((author, index) => (
+						<tr>
+							<td>
+								<div class="flex items-center gap-3">
+									<div class="avatar">
+										<div class="mask mask-squircle h-12 w-12">
+											{/* Use the generated avatar */}
+											<div class="w-12 h-12" set:html={avatars[index]} />
+										</div>
+									</div>
+									<div>
+										<div class="font-bold">{author}</div>
+										<div class="text-sm opacity-50">Author</div>
+									</div>
+								</div>
+							</td>
+							<td>
+								<a
+									class="btn btn-sm btn-primary"
+									href={`/author/${authorUsernames[index]}`}
+									class="link"
+								>
+									View Posts
+								</a>
+							</td>
+							<td>
+								{authorLinkedIns[index] === "" ? (
+									<span class="text-gray-500">Not available</span>
+								) : (
+									<a
+										class="btn btn-sm btn-secondary"
+										href={authorLinkedIns[index]}
+										target="_blank"
+										class="link"
+									>
+										Follow
+									</a>
+								)}
+							</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+</div>

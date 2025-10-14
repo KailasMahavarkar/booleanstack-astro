@@ -1,0 +1,23 @@
+{
+	"extends": "astro/tsconfigs/base",
+	"compilerOptions": {
+		"strictNullChecks": true,
+		"jsx": "preserve",
+		"jsxImportSource": "react",
+		"verbatimModuleSyntax": true,
+		"esModuleInterop": true,
+		"paths": {
+			"@src/*": ["./src/*"],
+			"@components/*": ["./src/components/*"],
+			"@styles/*": ["./src/styles/*"],
+			"@mdx/*": ["./src/components/mdx/*"],
+			"@helpers": ["./src/helpers/index.ts"],
+			"@helpers/*": ["./src/helpers/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@env": ["./env.ts"]
+		},
+		"baseUrl": "./"
+	},
+	"include": ["src", "opengraph/prng.ts"],
+	"exclude": ["dist"]
+}

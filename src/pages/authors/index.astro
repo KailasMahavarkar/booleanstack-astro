@@ -1,0 +1,15 @@
+---
+import Layout from "@components/layout.astro";
+import { posts } from "@helpers";
+import AuthorList from "@src/components/post/author-list.astro";
+---
+
+<Layout>
+	<AuthorList
+		authors={posts.map((post) => post.data.author)}
+		authorLinkedIns={posts
+			.map((post) => post.data.authorLinkedIn)
+			.filter((linkedIn) => linkedIn !== undefined)}
+		authorUsernames={posts.map((post) => post.data.authorUsername)}
+	/>
+</Layout>

@@ -1,0 +1,6 @@
+---
+import { YouTube } from "astro-embed";
+const { id, class: className, ...rest } = Astro.props;
+---
+
+<YouTube id={id} class=`border-1 rounded-md mb-5 border-[1px] border-white ${className}` {...rest} />
