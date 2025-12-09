@@ -1,0 +1,380 @@
+---
+title: "Bubble Sort"
+thumbnailText: "Bubble Sort"
+description: "Bubble sort (sometimes called sinking sort) is usually the first sorting algorithm you'll encounter when learning to code. It's simple, easy to wrap your head around, stable, and in-place. The catch? Its quadratic time complexity makes it painfully slow for large datasets."
+date: "2025-01-15"
+tags: ["bubble-sort", "algorithm", "data-structures", "sorting"]
+cover: ""
+author: "Kailas Mahavarkar"
+authorUsername: "kailas-mahavarkar"
+authorLinkedIn: "https://www.linkedin.com/in/kailasmahavarkar/"
+words: [
+    "swap", "adjacent", "compare", "iteration", "pass", "unsorted",
+    "sorted", "nested_loops", "compare_and_swap", "stability",
+    "in_place", "time_complexity", "quadratic", "n_minus_i", "optimization",
+    "early_exit", "flag", "bubble_up", "largest_to_end", "ascending",
+    "descending", "inner_loop", "outer_loop", "brute_force",
+    "inefficient", "simple", "intuitive", "pairwise", "exchange",
+    "order", "array", "list", "indices", "traverse", "scan",
+    "position", "repeat", "iterations", "worst_case", "best_case",
+    "average_case", "sorted_prefix", "swap_flag", "stability_property",
+    "performance", "algorithm", "basic_sort", "operation", "comparison"
+]
+modelConfig:
+  visualization: "unknown"
+  contextGathering:
+    - "unknown"
+    - "unknown"
+    - "unknown"
+  workflow:
+    synthesis: "unknown"
+    correction: "unknown"
+    humanization: "unknown"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import BubbleSortBasic from "@components/examples/bubble-sort/BubbleSortBasic";
+import BubbleSortOptimized from "@components/examples/bubble-sort/BubbleSortOptimized";
+import BubbleSortComparison from "@components/examples/bubble-sort/BubbleSortComparison";
+
+# Bubble Sort
+
+Bubble sort (sometimes called **sinking sort**) is usually the first sorting algorithm you'll encounter when learning to code. It's **simple**, **easy to wrap your head around**, **stable**, and **in-place**. The catch? Its quadratic time complexity makes it painfully slow for large datasets. But here's the thing—understanding bubble sort gives you a solid mental model for how comparison-based sorting actually works: swaps, passes, and complexity analysis.
+
+---
+
+## Real-World Analogy
+
+<Notation type="box" color="red" strokeWidth={2} padding={10}>
+<strong>Real-World Analogy</strong>: Picture a line of people standing in random order. You want them arranged from shortest to tallest. Someone walks down the line comparing each pair of neighbors. If the person on the left is taller, they swap places. After one complete walk-through, the tallest person will have "bubbled up" to the far right. Keep repeating this process, and eventually everyone stands in perfect height order. That's bubble sort in a nutshell.
+</Notation>
+
+---
+
+## How Bubble Sort Works (Core Idea)
+
+At its heart, **bubble sort repeatedly scans through the array and swaps neighbors that are out of order**.
+
+For an array of length `n` (sorting in ascending order):
+
+1. Start at index `0`.
+2. Compare `arr[j]` and `arr[j + 1]`.
+3. If `arr[j] > arr[j + 1]`, swap them.
+4. Move `j` forward until you hit the end of the unsorted portion.
+5. After the first pass? The maximum element is guaranteed to be sitting at index `n - 1`.
+6. Rinse and repeat. Each pass lets you stop one step earlier since the largest elements have already bubbled to their final spots.
+
+After `k` passes, the last `k` elements are locked in place.
+
+<Notation type="highlight" color="rgba(255, 235, 59, 0.4)" padding={10}>
+<strong>Key Concept</strong>: Bubble sort only swaps <em>adjacent elements</em>. This is what makes it <strong>stable</strong> (equal elements keep their relative order) and dead simple to implement in-place.
+</Notation>
+
+---
+
+## Visualizing Basic Bubble Sort
+
+### Basic Pass-by-Pass Behavior
+
+Use this interactive visualizer to watch how basic (non-optimized) bubble sort moves through an array, pass by pass and swap by swap.
+
+<BubbleSortBasic client:load />
+
+As you step through it, notice:
+
+- Each pass pushes the current largest element to the end of the unsorted region.
+- The unsorted region shrinks from the right (`[0..n-1]`, then `[0..n-2]`, and so on).
+- The algorithm keeps comparing even when the array's already sorted (we'll fix that soon).
+
+---
+
+## Step-by-Step Example
+
+Let's sort `[5, 3, 8, 4, 2]` in ascending order using the basic algorithm.
+
+**Pass 1** (compare indices `0` to `3`):
+
+1. Compare `(5, 3)` → swap → `[3, 5, 8, 4, 2]`
+2. Compare `(5, 8)` → no swap needed → `[3, 5, 8, 4, 2]`
+3. Compare `(8, 4)` → swap → `[3, 5, 4, 8, 2]`
+4. Compare `(8, 2)` → swap → `[3, 5, 4, 2, 8]`  
+   *Result:* The max element `8` is now locked at the end.
+
+**Pass 2** (compare indices `0` to `2`):
+
+1. Compare `(3, 5)` → already good
+2. Compare `(5, 4)` → swap → `[3, 4, 5, 2, 8]`
+3. Compare `(5, 2)` → swap → `[3, 4, 2, 5, 8]`  
+   *Result:* `5` is now fixed at index `3`.
+
+**Pass 3** (compare indices `0` to `1`):
+
+1. Compare `(3, 4)` → looks good
+2. Compare `(4, 2)` → swap → `[3, 2, 4, 5, 8]`  
+   *Result:* `4` is locked at index `2`.
+
+**Pass 4** (compare index `0`):
+
+1. Compare `(3, 2)` → swap → `[2, 3, 4, 5, 8]`  
+
+Done. Array sorted.
+
+---
+
+## Optimized Bubble Sort (Early Exit)
+
+The basic version has a glaring inefficiency—it keeps running passes even after the array's already sorted. We can fix this with a simple trick: **exit early if no swaps happen**.
+
+**The Strategy:**
+
+- Before each pass, set a flag `swapped = false`.
+- Whenever you swap, flip it to `swapped = true`.
+- After the inner loop finishes, if `swapped` is still `false`? You're done. The array's sorted.
+
+This single optimization drops the **best-case time complexity** from `O(n²)` down to `O(n)` (when the input's already sorted).
+
+### See the Optimization in Action
+
+<BubbleSortOptimized client:load />
+
+Try running the optimized version on:
+
+- An already sorted array.
+- A nearly sorted array (just 1–2 elements out of place).
+- A reverse-sorted array.
+
+You'll see that for sorted or nearly sorted inputs, it stops after just a few passes. But for reverse-sorted arrays? It still grinds through all those quadratic comparisons.
+
+---
+
+## Implementation (Java, C++, Python)
+
+Here's production-ready, **optimized bubble sort** in three languages.
+
+<CodeTabs
+  tabLabels={["Java", "C++", "Python"]}
+  tabs={{
+    java: injectCode(`
+      public class BubbleSort {
+
+          public static void sort(int[] arr) {
+              int n = arr.length;
+              boolean swapped;
+
+              // Outer loop runs at most n-1 passes
+              for (int i = 0; i < n - 1; i++) {
+                  swapped = false;
+
+                  // Last i elements are already in place
+                  for (int j = 0; j < n - i - 1; j++) {
+                      if (arr[j] > arr[j + 1]) {
+                          // Swap adjacent elements
+                          int temp = arr[j];
+                          arr[j] = arr[j + 1];
+                          arr[j + 1] = temp;
+                          swapped = true;
+                      }
+                  }
+
+                  // If no elements were swapped, array is sorted
+                  if (!swapped) {
+                      break;
+                  }
+              }
+          }
+
+          public static void main(String[] args) {
+              int[] arr = {64, 34, 25, 12, 22, 11, 90};
+              sort(arr);
+
+              System.out.print("Sorted array: ");
+              for (int num : arr) {
+                  System.out.print(num + " ");
+              }
+          }
+      }
+    `),
+    cpp: injectCode(`
+      #include <iostream>
+      #include <vector>
+      using namespace std;
+
+      void bubbleSort(vector<int>& arr) {
+          int n = static_cast<int>(arr.size());
+          bool swapped;
+
+          // Outer loop for passes
+          for (int i = 0; i < n - 1; ++i) {
+              swapped = false;
+
+              // Inner loop for adjacent comparisons
+              for (int j = 0; j < n - i - 1; ++j) {
+                  if (arr[j] > arr[j + 1]) {
+                      swap(arr[j], arr[j + 1]);
+                      swapped = true;
+                  }
+              }
+
+              // Stop early if already sorted
+              if (!swapped) {
+                  break;
+              }
+          }
+      }
+
+      int main() {
+          vector<int> arr = {64, 34, 25, 12, 22, 11, 90};
+          bubbleSort(arr);
+
+          cout << "Sorted array: ";
+          for (int num : arr) {
+              cout << num << " ";
+          }
+          cout << '\\n';
+
+          return 0;
+      }
+    `),
+    python: injectCode(`
+      from typing import List
+
+      def bubble_sort(arr: List[int]) -> List[int]:
+          """Sort a list of integers in ascending order using optimized bubble sort."""
+          n = len(arr)
+          for i in range(n - 1):
+              swapped = False
+
+              # After i passes, the last i elements are in the correct place
+              for j in range(0, n - i - 1):
+                  if arr[j] > arr[j + 1]:
+                      arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                      swapped = True
+
+              # If no swaps in this pass, list is already sorted
+              if not swapped:
+                  break
+
+          return arr
+
+
+      if __name__ == "__main__":
+          data = [64, 34, 25, 12, 22, 11, 90]
+          bubble_sort(data)
+          print("Sorted array:", data)
+    `)
+  }}
+/>
+
+**Implementation notes:**
+
+- All versions are **in-place**—they modify the original array/list.
+- They're **stable** because we never swap equal elements.
+- The optimization logic is identical across languages: a `swapped` flag and a shrinking inner-loop range.
+
+---
+
+## Complexity Analysis
+
+### Time Complexity
+
+- **Worst case**: `O(n²)`  
+  - Happens when the input's reverse-sorted.  
+  - Outer loop: `n - 1` passes.  
+  - Inner loop: Roughly `O(n²)` comparisons total.
+
+- **Average case**: `O(n²)`  
+  - Random permutations still need a quadratic number of comparisons and swaps.
+
+- **Best case (with optimization)**: `O(n)`  
+  - Occurs when the array's already sorted. First pass makes `n - 1` comparisons, zero swaps, checks `swapped == false`, and bails out.
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+<strong>Time Complexity</strong>: Bubble sort clocks in at <strong>O(n²)</strong> for average and worst cases because of those nested loops. It only hits <strong>O(n)</strong> on sorted input when you've got the early-exit optimization in place.
+</Notation>
+
+### Space Complexity
+
+- Uses just a handful of variables (`i`, `j`, `swapped`, and a temp for swapping).
+- No extra arrays or recursion stacks.
+- **Space complexity**: `O(1)` auxiliary space.
+
+### Other Properties
+
+- **Stable**: Equal items maintain their original order.
+- **In-place**: Only swaps elements within the existing array.
+- **Adaptive (with optimization)**: Performs way better on nearly sorted data.
+
+---
+
+## Comparing Bubble Sort to Other Algorithms
+
+In the real world, bubble sort gets absolutely crushed by `O(n log n)` algorithms like Quicksort, Mergesort, or Timsort (Python's built-in sort).
+
+Use this visualization to see how bubble sort's performance tanks compared to efficient alternatives as your dataset grows.
+
+<BubbleSortComparison client:load />
+
+**What you'll typically see:**
+
+- For tiny arrays (say, `n <= 10`), constant factors matter more than Big-O, so bubble sort can be "fast enough" while being trivial to write.
+- As `n` grows? That `n²` becomes a nightmare compared to `n log n`.  
+- Built-in language sorts are heavily optimized and handle edge cases you probably haven't thought of.
+
+---
+
+## When (and Why) You Might Use Bubble Sort
+
+Look, you shouldn't reach for bubble sort in production for anything beyond trivial data sizes. But it's still useful in specific situations:
+
+1.  **Education and Interviews**:
+    - It's the perfect teaching tool for comparison-based sorting.
+    - Great baseline for discussing complexity, stability, and in-place algorithms.
+
+2.  **Tiny Collections**:
+    - For extremely small arrays where performance doesn't matter, bubble sort gives you a compact, stable solution. (Though honestly, Insertion Sort is usually the better pick here.)
+
+3.  **Nearly Sorted Data**:
+    - If you know your array's almost sorted, the optimized version can actually be pretty fast (`O(n)`).
+
+4.  **Restricted Environments**:
+    - In embedded systems or teaching environments where code memory is tight and `n` is small, the simplicity can be a genuine advantage.
+
+---
+
+## Common Pitfalls and Edge Cases
+
+<Notation type="box" color="rgba(244, 67, 54, 0.1)" strokeWidth={1} padding={10}>
+<strong>Edge Cases and Pitfalls</strong>:
+1. <strong>Inner Loop Bounds</strong>: Forget to subtract <code>i</code> in the inner loop (`n - i - 1`) and you'll waste time re-comparing already sorted elements.
+2. <strong>Missing Optimization</strong>: Skip the `swapped` flag and your best-case stays at O(n²). Ouch.
+3. <strong>Off-by-one Errors</strong>: Using `j <= n - i - 1` instead of `j < n - i - 1` will cause an out-of-bounds crash when checking `arr[j+1]`.
+4. <strong>Descending Order</strong>: Flip the comparison by accident (`<` instead of `>`) and suddenly you're sorting in reverse.
+</Notation>
+
+---
+
+## Optimization Tips and Variants
+
+Bubble Sort is inherently `O(n²)`, but you can squeeze out some improvements:
+
+1.  **Shrinking Inner Loop**: Always use `n - i - 1` to skip the sorted tail.
+2.  **Cocktail Shaker Sort**: A bidirectional variant that alternates left-to-right and right-to-left passes. This helps move small elements stuck at the end (the infamous "turtles") to the front faster. Still `O(n²)` though.
+3.  **Knowing When to Switch**: For anything beyond toy examples, if you need a simple `O(n²)` algorithm, **Insertion Sort** is usually faster in practice because it does fewer writes.
+
+<Notation type="circle" color="green" strokeWidth={2} padding={12}>
+<strong>Practical Tip</strong>: Think of bubble sort as your gateway drug. Once you're comfortable with it, move on to insertion sort, then selection sort, and finally tackle quicksort or mergesort to see how they compare.
+</Notation>
+
+---
+
+## Summary and Key Takeaways
+
+- **What it is**: A simple, stable, in-place sorting algorithm that repeatedly swaps adjacent out-of-order elements.
+- **Performance**:
+  - Worst/Average Time: `O(n²)`
+  - Best Time (Optimized): `O(n)`
+  - Space: `O(1)`
+- **Why it matters**: It's the "Hello World" of sorting algorithms—fantastic for learning, rarely used in production.
+- **When to use it**: Educational examples, extremely small datasets, or nearly sorted data when standard library sorts aren't available.
+
+Mastering bubble sort isn't about using it in real projects. It's about building a rock-solid foundation in how sorting actually works under the hood. Once you've got that down, you'll find it way easier to understand and implement more sophisticated algorithms.

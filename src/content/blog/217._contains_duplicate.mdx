@@ -1,0 +1,196 @@
+---
+blogid: "aa395743"
+title: "217. Contains Duplicate"
+description: "Master the fundamental array problem of detecting duplicates using Hash Sets, Sorting, and Brute Force approaches."
+date: "2025-11-30"
+modifiedDate: "2025-11-30"
+tags: ["algorithm", "data-structures", "hash-set", "arrays", "sorting"]
+thumbnailText: "Detect Duplicates Efficiently"
+words: ["duplicate", "hashset", "sorting", "array", "distinct", "frequency", "collision", "optimization", "complexity", "linear", "quadratic", "python", "java", "cpp", "algorithm", "leetcode", "interview", "set", "brute-force", "lookup", "unique", "vector", "iterator", "comparison", "performance"]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-3-pro-preview"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "google/gemini-3-pro-preview"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import ContainsDuplicateHashSet from "@components/examples/217.-contains-duplicate/ContainsDuplicateHashSet";
+import ContainsDuplicateSorting from "@components/examples/217.-contains-duplicate/ContainsDuplicateSorting";
+import ContainsDuplicateBruteForce from "@components/examples/217.-contains-duplicate/ContainsDuplicateBruteForce";
+
+# Contains Duplicate: The Gateway to Hash-Based Algorithms
+
+LeetCode 217, **Contains Duplicate**, is often one of the first hurdles you clear when moving from "I know syntax" to "I think algorithmically." It looks deceptively simple—just determine if any number appears twice in a list. But the way you solve it actually teaches you the most important trade-off in computer science: time vs. space.
+
+This problem is a favorite in interviews at places like Apple and Amazon not because it's hard, but because it tests whether you can pick the right tool for the job.
+
+## Real-World Analogy
+
+<Notation type="box" color="blue" padding={10} strokeWidth={2}>
+**The Guest List Analogy**: Imagine you are working the door at an exclusive event.
+1.  **Brute Force**: You let everyone inside, then walk around the room asking literally every person to introduce themselves to every *other* person to see if names match. (This is a disaster).
+2.  **Sorting**: You yell, "Everyone line up alphabetically!" Then you walk down the line and just check if the person standing next to you has the same name. (Faster, but organizing people is hard work).
+3.  **Hash Set**: You have a clipboard (a Set). As each person walks up, you check if their name is already on your list. If it is, you stop them. If not, you write it down. (Fastest and most efficient).
+</Notation>
+
+## Approach 1: Brute Force (Naive)
+
+The most intuitive way to solve this is to just compare everything. Pick the first number, check it against the rest. Pick the second, check it against the rest. Rinse and repeat.
+
+### Visualization: Brute Force Comparison
+Watch how the number of comparisons explodes even with a tiny array.
+
+<ContainsDuplicateBruteForce client:load />
+
+<Notation type="underline" color="red" strokeWidth={2}>
+⚠️ **Performance Warning**: This approach runs in **O(n²)** time. That's fine for 10 items, but if you feed this solution 100,000 elements, your code will time out before it finishes.
+</Notation>
+
+## Approach 2: Sorting
+
+Here's a different angle: if we organize the data first, the problem changes. Once the array is sorted, any duplicate values *must* be neighbors.
+
+This transforms the problem from a global search to a local check. You don't need to scan the whole list anymore; just check if `nums[i]` is the same as the guy next to him (`nums[i+1]`).
+
+### Visualization: Sorting Method
+Notice how sorting brings the duplicate `2`s together, allowing us to spot them in a single pass.
+
+<ContainsDuplicateSorting client:load />
+
+While this is way better than brute force, sorting isn't free. It modifies your input array (which might annoy your caller) and costs **O(n log n)** time.
+
+## Approach 3: Hash Set (Optimal)
+
+This is the standard "correct" answer in an interview. We use a **Hash Set**.
+
+Since Sets are designed to enforce uniqueness, they do the heavy lifting for us. We iterate through the array and try to add each number to the Set. The moment we hit a number that's already in there? Boom, we found our duplicate.
+
+### Visualization: Hash Set Detection
+See how the algorithm stops immediately upon finding the second `1`? We don't even need to look at the rest of the list.
+
+<ContainsDuplicateHashSet client:load />
+
+<Notation type="highlight" color="rgba(16, 185, 129, 0.3)" padding={8}>
+**Key Concept**: The Hash Set gives us **O(1)** average time for lookups. This brings our total runtime down to linear **O(n)**.
+</Notation>
+
+## Implementation
+
+Here is the production-ready code for the Hash Set approach. Notice the early return—we bail out the second a duplicate is found rather than finishing the loop.
+
+<CodeTabs
+    tabLabels={["Java", "C++", "Python"]}
+    tabs={{
+        'java': injectCode(`
+            import java.util.HashSet;
+            import java.util.Set;
+
+            class Solution {
+                public boolean containsDuplicate(int[] nums) {
+                    // Initialize a HashSet to store unique elements
+                    Set<Integer> seen = new HashSet<>();
+                    
+                    for (int num : nums) {
+                        // Set.add() returns false if the element is already present
+                        if (!seen.add(num)) {
+                            return true;
+                        }
+                    }
+                    
+                    // If loop finishes, no duplicates were found
+                    return false;
+                }
+            }
+        `),
+        'cpp': injectCode(`
+            #include <vector>
+            #include <unordered_set>
+            using namespace std;
+
+            class Solution {
+            public:
+                bool containsDuplicate(vector<int>& nums) {
+                    // Use unordered_set for O(1) average time complexity
+                    unordered_set<int> seen;
+                    
+                    for (int num : nums) {
+                        // Check if num is already in the set
+                        if (seen.count(num)) {
+                            return true;
+                        }
+                        // Insert num into the set
+                        seen.insert(num);
+                    }
+                    
+                    return false;
+                }
+            };
+        `),
+        'python': injectCode(`
+            class Solution:
+                def containsDuplicate(self, nums: list[int]) -> bool:
+                    # Initialize an empty set
+                    seen = set()
+                    
+                    for num in nums:
+                        # Check if number was already seen
+                        if num in seen:
+                            return True
+                        seen.add(num)
+                        
+                    return False
+                    
+                # Alternative One-Liner (Explanation below):
+                # return len(nums) != len(set(nums))
+        `)
+    }}
+/>
+
+## Complexity Analysis
+
+Understanding the trade-offs here is crucial for system design (and passing the interview).
+
+| Approach | Time Complexity | Space Complexity | Notes |
+| :--- | :--- | :--- | :--- |
+| **Brute Force** | $O(n^2)$ | $O(1)$ | Way too slow for big datasets. |
+| **Sorting** | $O(n \log n)$ | $O(1)$ or $O(n)$ | Changes the input order; space depends on the sort logic. |
+| **Hash Set** | $O(n)$ | $O(n)$ | **Fastest**, but eats up more RAM. |
+
+<Notation type="bracket" brackets={["left"]} color="purple" strokeWidth={2} padding={[5, 15]}>
+**Why O(n) Space?**
+In the worst case (where every number is unique), our Hash Set has to memorize every single integer from the input. If the input has 1 million integers, the Set grows to size 1 million.
+</Notation>
+
+## Practical Applications
+
+This isn't just LeetCode trivia; duplicate detection is everywhere in real engineering:
+
+1.  **Data Validation**: Stopping a user from signing up with an email address that's already in the database.
+2.  **Caching**: Checking if a specific request ID has already been handled so you don't accidentally charge a credit card twice.
+3.  **Fraud Detection**: Flagging it when the same IP address tries to make ten transactions in one second.
+
+## Common Pitfalls & Edge Cases
+
+*   **Large Inputs**: Always assume $N$ can be up to $10^5$. The brute force solution *will* fail.
+*   **Negative Numbers**: The constraints say numbers can be negative. If you try to get clever and use a simple array as a frequency counter (like `arr[num]`), your code will crash because arrays can't have negative indexes. Hash Sets handle this automatically.
+*   **Input Modification**: If you choose the sorting approach, ask your interviewer if you're allowed to mess up the order of the `nums` array. If not, you have to copy it first, which increases your memory usage anyway.
+
+<Notation type="circle" color="green" padding={12}>
+💡 **Pro Tip**: In Python, `len(nums) != len(set(nums))` is super clean and Pythonic. However, in an interview, writing out the loop shows you understand the *mechanism* of early termination. It's actually more efficient because you stop immediately if the second item is a duplicate, rather than building the whole set first.
+</Notation>
+
+## Conclusion
+
+**Contains Duplicate** is basically the "Hello World" of Hash-based algorithms. We trade a little bit of memory ($O(n)$ space) for a massive speed boost ($O(n)$ time).
+
+Unless you are working on embedded systems where RAM is incredibly tight, the Hash Set is almost always the way to go. It's cleaner, faster, and easier to read.

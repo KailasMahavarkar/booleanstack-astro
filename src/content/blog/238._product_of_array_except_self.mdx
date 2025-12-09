@@ -1,0 +1,244 @@
+---
+blogid: "5a271e35"
+title: "238. Product Of Array Except Self"
+description: "Master the O(n) prefix-suffix pattern to solve LeetCode 238 without division."
+date: "2025-12-01"
+modifiedDate: "2025-12-01"
+tags: ["algorithm", "arrays", "prefix-sum", "leetcode", "optimization"]
+thumbnailText: "Solve LeetCode 238"
+words: ["prefix", "suffix", "product", "array", "leetcode", "algorithm", "optimization", "complexity", "linear", "space", "division", "java", "python", "cpp", "coding", "interview", "google", "faang", "zero", "edge-case"]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4.5-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-3-pro-preview"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "anthropic/claude-4.5-sonnet"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import ProductArrayLeftRight from "@components/examples/238.-product-of-array-except-self/ProductArrayLeftRight";
+import ProductArrayOptimized from "@components/examples/238.-product-of-array-except-self/ProductArrayOptimized";
+import ProductArrayDivision from "@components/examples/238.-product-of-array-except-self/ProductArrayDivision";
+
+# Product of Array Except Self: The Prefix-Suffix Pattern
+
+If you've been grinding LeetCode for interviews at Amazon, Apple, or Facebook, you've probably run into this one. LeetCode 238 - "Product of Array Except Self" - is one of those problems that looks deceptively simple until you read the constraints.
+
+Here's what you need to do: take an array `nums` and create a new array where each element at index `i` equals the product of all the other elements in the original array. Everything *except* the element at `i`.
+
+**The catch?** You've got to do this in **O(n)** time, and—here's the kicker—**you can't use division**.
+
+Yeah, I know. That second constraint changes everything.
+
+## Real-World Analogy
+
+<Notation type="box" color="blue" padding={10} strokeWidth={2}>
+**Analogy: The Secret Gift Pool**
+
+Think about this scenario: you and 3 friends are pooling money for a gift. Everyone puts cash in an envelope, but you want to know how much *everyone else* contributed—without counting your own money.
+
+1.  **With Division:** Easy. Count all the money, then divide by what you put in.
+2.  **Without Division:** Now it gets interesting. You can't see the total, so instead you ask the friends on your **left** what their combined total is, and the friends on your **right** for theirs. Multiply those two numbers together, and boom—you know what everyone else contributed without ever calculating the total or using division.
+</Notation>
+
+This is basically what we're doing with the array problem.
+
+## Why Can't We Just Use Division?
+
+Look, the obvious solution is to multiply everything together, then divide by each element. Simple, right?
+
+Wrong. And not just because the problem says we can't.
+
+### The Zero Problem
+
+Here's the thing: if your array contains even one **zero**, the entire product becomes 0. Now what? You'd need to divide by zero for that element, which is... well, mathematically impossible. Your program crashes, or you end up writing a bunch of messy exception handling code.
+
+<Notation type="highlight" color="rgba(244, 67, 54, 0.2)" padding={5}>
+**Critical Failure:** With `nums = [1, 2, 0, 4]`, the total product is 0. When you try to calculate the answer for the zero element, you're doing `0 / 0`. That's undefined, and your code explodes.
+</Notation>
+
+Let me show you what the division approach looks like (and where it falls apart):
+
+## Visualizing the Division Approach
+<ProductArrayDivision client:load />
+
+## The Real Solution: Prefix and Suffix Products
+
+Since division is off the table, we need a different approach. Let's break down what we're actually calculating for each position.
+
+For any index `i`, the answer is:
+- Everything to the **left** of `i` multiplied together
+- Times everything to the **right** of `i` multiplied together
+
+That's it. We're just splitting the problem in two.
+
+`Answer[i] = (Product of nums[0...i-1]) × (Product of nums[i+1...n-1])`
+
+(If you're at the start or end of the array, the "empty" side just counts as 1.)
+
+### First Attempt: Using Two Arrays (O(n) Space)
+
+The straightforward way to do this is to pre-calculate two arrays:
+*   `Left[i]`: Product of everything from index `0` to `i-1`
+*   `Right[i]`: Product of everything from index `i+1` to `n-1`
+
+Then multiply `Left[i] * Right[i]` for your answer. Done.
+
+## Visualizing the Two-Pass Approach
+<ProductArrayLeftRight client:load />
+
+This works perfectly. But can we do better?
+
+## The Optimized Version: O(1) Space
+
+Here's where it gets clever. We're using **O(n)** extra space for those `Left` and `Right` arrays. But what if we could do this with just the output array and a couple of variables?
+
+<Notation type="underline" color="green" strokeWidth={2} padding={5}>
+**Space Optimization Trick**: Store the prefix products directly in the output array, then multiply by a running suffix variable in a second pass. No extra arrays needed.
+</Notation>
+
+### How It Works
+
+Let's break this down step by step:
+
+1.  **Setup**: Create your `answer` array (same length as input)
+2.  **First Pass (Left to Right)**:
+    *   Walk through the array from left to right
+    *   At each spot, store the product of everything to the left
+    *   Start with `answer[0] = 1` (nothing to the left of the first element)
+3.  **Second Pass (Right to Left)**:
+    *   Walk backwards through the array
+    *   Keep a running variable for the suffix product (start at 1)
+    *   Multiply what's already in `answer[i]` (the prefix) by this suffix
+    *   Update the suffix to include the current number
+
+## Visualizing the Optimized Solution
+<ProductArrayOptimized client:load />
+
+It's like we're painting the answer in two coats—first the left products, then we layer the right products on top.
+
+## Implementation
+
+Alright, here's the code for the space-optimized solution. Remember, the problem says the output array doesn't count toward space complexity (which is nice of them).
+
+<CodeTabs
+    tabLabels={["Java", "C++", "Python"]}
+    tabs={{
+        'java': injectCode(`
+            class Solution {
+                public int[] productExceptSelf(int[] nums) {
+                    int n = nums.length;
+                    int[] answer = new int[n];
+                    
+                    // Left pass: answer[i] will contain the product of all elements to the left of i
+                    answer[0] = 1;
+                    for (int i = 1; i < n; i++) {
+                        answer[i] = answer[i - 1] * nums[i - 1];
+                    }
+                    
+                    // Right pass: R contains the product of all elements to the right of i
+                    int R = 1;
+                    for (int i = n - 1; i >= 0; i--) {
+                        // Multiply the prefix product (already in answer[i]) by the suffix product R
+                        answer[i] = answer[i] * R;
+                        // Update R to include nums[i] for the next iteration
+                        R *= nums[i];
+                    }
+                    
+                    return answer;
+                }
+            }
+        `),
+        'cpp': injectCode(`
+            #include <vector>
+            using namespace std;
+
+            class Solution {
+            public:
+                vector<int> productExceptSelf(vector<int>& nums) {
+                    int n = nums.size();
+                    vector<int> answer(n);
+                    
+                    // Left pass: calculate prefix products
+                    answer[0] = 1;
+                    for(int i = 1; i < n; i++) {
+                        answer[i] = answer[i-1] * nums[i-1];
+                    }
+                    
+                    // Right pass: calculate suffix products and combine
+                    int rightProduct = 1;
+                    for(int i = n - 1; i >= 0; i--) {
+                        answer[i] *= rightProduct;
+                        rightProduct *= nums[i];
+                    }
+                    
+                    return answer;
+                }
+            };
+        `),
+        'python': injectCode(`
+            from typing import List
+
+            class Solution:
+                def productExceptSelf(self, nums: List[int]) -> List[int]:
+                    length = len(nums)
+                    answer = [0] * length
+                    
+                    # Left pass: answer[i] contains the product of all elements to the left
+                    answer[0] = 1
+                    for i in range(1, length):
+                        answer[i] = nums[i - 1] * answer[i - 1]
+                    
+                    # Right pass: R contains the product of all elements to the right
+                    R = 1
+                    for i in reversed(range(length)):
+                        # Multiply the prefix product (already in answer[i]) by the suffix product R
+                        answer[i] = answer[i] * R
+                        # Update R to include nums[i] for the next iteration
+                        R *= nums[i]
+                        
+                    return answer
+        `)
+    }}
+/>
+
+## Complexity Analysis
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Time Complexity**: O(N)
+</Notation>
+
+We make two passes through the array—one forward, one backward. That's O(2N), which simplifies to O(N). Linear time, just like the problem asked for.
+
+<Notation type="underline" color="blue" strokeWidth={2} padding={5}>
+**Space Complexity**: O(1)
+</Notation>
+
+We're using the output array, but the problem explicitly says that doesn't count as extra space. Beyond that, we've only got a handful of variables (`R`, `i`, `n`). The earlier version with separate `Left` and `Right` arrays would be O(N) space, which is why this optimization matters.
+
+## Watch Out For These Gotchas
+
+1.  **Forgetting to initialize with 1**: If you start your accumulator at `0`, the entire product chain becomes zero. Not fun to debug.
+2.  **Off-by-one errors**: Your prefix loop should start at index `1` (since you're looking back at `i-1`), and your suffix loop starts at `n-1`. Get these wrong and you'll be scratching your head for a while.
+3.  **The zero cases** (this is actually kind of cool):
+    *   **No zeros**: Everything works normally
+    *   **One zero**: Only the zero's position gets a non-zero answer (it's the product of everything else). All other positions are `0`
+    *   **Two or more zeros**: The entire result is zeros, since every "except self" group includes at least one zero
+    
+    The beautiful part? Our algorithm handles all of these automatically. No special `if` statements needed.
+
+## Wrapping Up
+
+This problem is a perfect example of how thinking in terms of "what's to my left" and "what's to my right" can crack open array problems that seem impossible at first glance. The prefix/suffix pattern shows up *everywhere*—you'll see it again in problems like "Trapping Rain Water" and "Candy."
+
+Once you get comfortable with this approach, you'll start spotting opportunities to use it all over the place. And that's when array problems start feeling less like puzzles and more like patterns you recognize.
+
+Now go ace that interview.

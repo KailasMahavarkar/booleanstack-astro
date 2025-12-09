@@ -7,6 +7,7 @@ import Tag from "@components/tag.astro";
 import DateTag from "@components/date-tag.astro";
 import PostContent from "@components/post/post-content.astro";
 import SimilarPosts from "@src/components/similar-posts.astro";
+import { WordCloud } from "@src/components/wordcloud/cloud";
 
 export async function getStaticPaths() {
 	const posts = await getCollection("blog");
@@ -63,13 +64,23 @@ const { post } = Astro.props;
 			<p class="text-lg text-center -700 max-w-[480px]">{post.data.description}</p>
 		</div>
 		{
-			post.data.cover && (
+			post.data.cover ? (
 				<img
 					src={`${post.data.cover}?w=1200&q=80`}
 					alt="cover"
 					class="w-full max-w-screen-lg mx-auto rounded-lg"
 				/>
-			)
+			) : post.data.words && post.data.words.length > 0 ? (
+				<div class="w-full max-w-screen-lg mx-auto rounded-lg border border-base-300 bg-base-100/50 p-8">
+					<WordCloud 
+						client:only="react"
+						words={post.data.words.map(w => ({ text: w, value: Math.random() * 100 + 20 }))}
+						width={800}
+						height={400}
+						className="w-full h-auto mx-auto"
+					/>
+				</div>
+			) : null
 		}
 	</div>
 	<div class="relative flex flex-col max-w-screen-lg mx-auto px-4">

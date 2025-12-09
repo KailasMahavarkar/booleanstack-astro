@@ -2,6 +2,7 @@
 import type { CollectionEntry } from "astro:content";
 import DateTag from "@components/date-tag.astro";
 import Tag from "@components/tag.astro";
+import Thumbnail from "@components/react/Thumbnail";
 
 interface Props {
 	post: CollectionEntry<"blog">;
@@ -9,7 +10,7 @@ interface Props {
 
 const { post } = Astro.props;
 
-const coverImageUrl = post.data.cover ? `${post.data.cover}?w=800&q=80` : "/default-cover.jpg";
+const coverImageUrl = post.data.cover ? `${post.data.cover}?w=800&q=80` : "";
 
 ---
 
@@ -18,12 +19,23 @@ const coverImageUrl = post.data.cover ? `${post.data.cover}?w=800&q=80` : "/defa
 >
 	<div class="aspect-video overflow-hidden">
 		<a href={`/posts/${post.slug}`} class="no-underline" aria-label={`Read ${post.data.title}`}>
-			<img
-				src={coverImageUrl}
-				alt={post.data.title}
-				class="w-full h-full mt-0 object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
-				loading="lazy"
-			/>
+			{
+				coverImageUrl ? (
+					<img
+						src={coverImageUrl}
+						alt={post.data.title}
+						class="w-full h-full mt-0 object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
+						loading="lazy"
+					/>
+				) : (
+					<Thumbnail
+						client:only="react"
+						text={post.data.thumbnailText || post.data.title}
+						responsive={true}
+						className="w-full h-full mt-0 object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out"
+					/>
+				)
+			}
 		</a>
 	</div>
 

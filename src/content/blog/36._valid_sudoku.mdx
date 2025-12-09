@@ -1,0 +1,265 @@
+---
+blogid: "a88615fd"
+title: "36. Valid Sudoku"
+description: "Master the art of validating Sudoku boards efficiently using hash sets and fixed-size arrays with O(1) complexity."
+date: "2025-12-03"
+modifiedDate: "2025-12-03"
+tags: ["algorithm", "data-structures", "hash-table", "matrix", "array"]
+thumbnailText: "Sudoku Validation Guide"
+words: ["sudoku", "validation", "matrix", "grid", "hash-set", "array", "constraint", "row", "column", "sub-box", "iteration", "traversal", "coordinate", "mapping", "complexity", "optimization", "bitmask", "java", "python", "c++", "algorithm", "logic", "boolean", "index", "formula"]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4.5-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-3-pro-preview"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "anthropic/claude-4.5-sonnet"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import SudokuValidationBasic from "@components/examples/36.-valid-sudoku/SudokuValidationBasic";
+import SudokuValidationInteractive from "@components/examples/36.-valid-sudoku/SudokuValidationInteractive";
+import SudokuValidationAlgorithm from "@components/examples/36.-valid-sudoku/SudokuValidationAlgorithm";
+
+# 36. Valid Sudoku: Efficient Grid Validation
+
+You've probably played Sudoku before—maybe on a long flight or in the back of a newspaper. It's that number puzzle where you fill a 9×9 grid following some pretty strict rules. But here's the thing: in the **Valid Sudoku** problem (LeetCode #36), we're not actually solving the puzzle. We're just checking if someone hasn't already broken the rules.
+
+Think of yourself as the referee, not the player. You're given a partially filled board, and your job is to verify that what's there so far doesn't violate any Sudoku rules. This makes for a great exercise in **matrix traversal** and **hashing**, and it'll really test whether you can map 2D coordinates to specific constraints efficiently.
+
+## The Rules (Quick Refresher)
+
+A Sudoku board is valid when:
+1.  **Rows**: Each row has the digits `1-9` without any repeats.
+2.  **Columns**: Each column has the digits `1-9` without any repeats.
+3.  **Sub-boxes**: Each of the nine `3x3` sub-boxes contains the digits `1-9` without any repeats.
+
+**Here's what trips people up**: The board doesn't need to be complete, and it doesn't even need to be solvable. We only care that the *existing* numbers don't contradict each other. Empty cells (shown as `'.'`) get a free pass—we ignore them completely.
+
+<Notation type="box" color="red" padding={10}>
+**Real-World Analogy**: Imagine you're a building inspector with three checklists. You walk through the building (the board) once. For every room (cell) you enter, you check:
+1. Does this floor (row) already have this room type?
+2. Does this vertical stack (column) already have this room type?
+3. Does this specific apartment block (3x3 box) already have this room type?
+If the answer is "yes" to any, the building is invalid.
+</Notation>
+
+### Visualizing the Board Structure
+
+Let's look at how a Sudoku board is actually structured before we get into the code.
+
+<SudokuValidationBasic client:load />
+
+## The Tricky Part: Those 3x3 Sub-boxes
+
+Checking rows and columns? Easy. You just iterate through indices `[row][0...8]` or `[0...8][col]`. 
+
+But the **3x3 sub-boxes**? That's where it gets interesting.
+
+The board splits into nine 3x3 sub-boxes arranged in a 3x3 grid. We need a way to mathematically map any cell `(row, col)` to a specific box index from `0` to `8`. And we need to do it fast.
+
+<Notation type="highlight" color="rgba(255, 235, 59, 0.4)" padding={8}>
+**Key Formula**: The box index `k` for a cell at `(r, c)` is calculated as:
+`k = (r / 3) * 3 + (c / 3)`
+</Notation>
+
+Let's break down the math (using integer division):
+*   `r / 3`: Which *block row* is this cell in? (0, 1, or 2)
+*   `c / 3`: Which *block column* is this cell in? (0, 1, or 2)
+*   Multiply the block row by 3 to shift us to the right set of boxes.
+
+Say we have a cell at `(4, 7)`:
+*   `4 // 3 = 1` (We're in the middle block-row)
+*   `7 // 3 = 2` (We're in the rightmost block-col)
+*   `index = 1 * 3 + 2 = 5` (That's the 6th box, using 0-based indexing)
+
+Pretty neat, right?
+
+## Interactive Validation Logic
+
+Try playing with the board below. You'll see how conflicts get detected immediately based on those three rules we talked about.
+
+<SudokuValidationInteractive client:load />
+
+## The Algorithm: One Pass Is All You Need
+
+Here's the beautiful part—we can validate the entire board in a single pass through all 81 cells. We just maintain three sets of "seen" records:
+1.  One for each of the 9 rows
+2.  One for each of the 9 columns
+3.  One for each of the 9 sub-boxes
+
+### How It Works Step-by-Step
+
+1.  Set up your data structures (sets or boolean arrays) for rows, columns, and boxes.
+2.  Loop through every cell `(i, j)` from `(0,0)` to `(8,8)`.
+3.  If the cell is `'.'`, skip it—nothing to check.
+4.  If the cell contains a digit `num`:
+    *   Is `num` already in `rows[i]`?
+    *   Is `num` already in `cols[j]`?
+    *   Is `num` already in `boxes[box_index]`?
+5.  If any check says "yes," return `false`. We found a violation.
+6.  Otherwise, add `num` to all three records.
+7.  If we make it through the entire loop without issues, return `true`.
+
+<SudokuValidationAlgorithm client:load />
+
+## Implementation
+
+You can implement this using Hash Sets (more flexible but slightly slower) or Fixed-Size Arrays (faster and more memory-efficient). The solution below uses **Fixed-Size Boolean Arrays**, which is the standard approach for this problem since we're always dealing with digits 1-9.
+
+<CodeTabs
+    tabLabels={["Java", "C++", "Python"]}
+    tabs={{
+        'java': injectCode(`
+            class Solution {
+                public boolean isValidSudoku(char[][] board) {
+                    // Use boolean arrays to track seen numbers
+                    // Dimensions: [9 indices][9 possible numbers]
+                    boolean[][] rows = new boolean[9][9];
+                    boolean[][] cols = new boolean[9][9];
+                    boolean[][] boxes = new boolean[9][9];
+            
+                    for (int r = 0; r < 9; r++) {
+                        for (int c = 0; c < 9; c++) {
+                            // Skip empty cells
+                            if (board[r][c] == '.') {
+                                continue;
+                            }
+            
+                            // Convert char '1'-'9' to integer index 0-8
+                            int num = board[r][c] - '1';
+                            
+                            // Calculate sub-box index
+                            int boxIndex = (r / 3) * 3 + (c / 3);
+            
+                            // Check for duplicates
+                            if (rows[r][num] || cols[c][num] || boxes[boxIndex][num]) {
+                                return false; // Violation found
+                            }
+            
+                            // Mark number as seen
+                            rows[r][num] = true;
+                            cols[c][num] = true;
+                            boxes[boxIndex][num] = true;
+                        }
+                    }
+            
+                    return true;
+                }
+            }
+        `),
+        'cpp': injectCode(`
+            class Solution {
+            public:
+                bool isValidSudoku(vector<vector<char>>& board) {
+                    // 9 rows/cols/boxes, each can hold numbers 1-9
+                    int rows[9][9] = {0};
+                    int cols[9][9] = {0};
+                    int boxes[9][9] = {0};
+                    
+                    for (int r = 0; r < 9; ++r) {
+                        for (int c = 0; c < 9; ++c) {
+                            if (board[r][c] == '.') continue;
+                            
+                            // Get number index (0-8)
+                            int num = board[r][c] - '1';
+                            
+                            // Calculate box index
+                            int k = (r / 3) * 3 + (c / 3);
+                            
+                            // Check if already seen
+                            if (rows[r][num] || cols[c][num] || boxes[k][num]) {
+                                return false;
+                            }
+                            
+                            // Mark as seen
+                            rows[r][num] = 1;
+                            cols[c][num] = 1;
+                            boxes[k][num] = 1;
+                        }
+                    }
+                    
+                    return true;
+                }
+            };
+        `),
+        'python': injectCode(`
+            class Solution:
+                def isValidSudoku(self, board: List[List[str]]) -> bool:
+                    # Sets are easier in Python, though arrays are faster
+                    rows = [set() for _ in range(9)]
+                    cols = [set() for _ in range(9)]
+                    boxes = [set() for _ in range(9)]
+                    
+                    for r in range(9):
+                        for c in range(9):
+                            val = board[r][c]
+                            
+                            if val == ".":
+                                continue
+                                
+                            # Calculate box index
+                            box_idx = (r // 3) * 3 + (c // 3)
+                            
+                            # Check constraints
+                            if (val in rows[r] or 
+                                val in cols[c] or 
+                                val in boxes[box_idx]):
+                                return False
+                                
+                            # Add to trackers
+                            rows[r].add(val)
+                            cols[c].add(val)
+                            boxes[box_idx].add(val)
+                            
+                    return True
+        `)
+    }}
+/>
+
+## Complexity Analysis
+
+<Notation type="underline" color="purple" strokeWidth={2}>
+**Time Complexity**: O(1) - Specifically O(81).
+</Notation>
+
+Since the Sudoku board is always 9x9, we're always doing a constant number of operations. We visit 81 cells exactly once. (If this were generalized to an $N \times N$ board, we'd be looking at $O(N^2)$ since we'd visit every cell once.)
+
+**Space Complexity**:
+*   **O(1)** (for our fixed 9x9 board): We use fixed-size arrays (roughly 3 * 9 * 9 booleans/integers).
+*   **O(N²)** (if we generalized it): We'd need to store the state of numbers for every row, column, and box.
+
+## Common Pitfalls
+
+<Notation type="circle" color="orange" padding={12}>
+⚠️ **Pitfall**: Confusing Validity with Solvability.
+</Notation>
+
+This is the most common mistake. People think they need to use backtracking to check if the board *can* be solved. But that's not what we're doing here. This problem only asks if the *current* numbers are valid. A board with just `['1', '2', '3', ...]` followed by empty cells is perfectly valid, even if it might be impossible to complete later.
+
+**Other Mistakes to Watch Out For**:
+1.  **Off-by-one errors**: Board digits are `'1'-'9'`, but array indices are `0-8`. Don't forget to subtract `'1'` (or 1) when converting.
+2.  **Wrong Box Math**: Using `%` instead of `/` for the box calculation. Remember, `(r % 3)` gives you the position *inside* a box, not which box you're in.
+3.  **Char vs Int confusion**: In strongly typed languages, make sure you're converting the character `'5'` to the integer `5` (or index `4`) correctly.
+
+## Going Further: Bitmasking
+
+Want to squeeze out every last bit of performance? In C++ or Java, you can replace the boolean arrays with integers using **bitmasks**.
+*   Each row/col/box becomes a single integer.
+*   To check if digit `k` is present: `(row[i] >> k) & 1`.
+*   To mark digit `k` as seen: `row[i] |= (1 << k)`.
+
+This cuts down on the space complexity constant factors significantly (though the Big-O stays the same). It's a nice trick to have in your back pocket.
+
+## Wrapping Up
+
+Valid Sudoku is one of those foundational constraint satisfaction problems that's worth understanding well. Once you've got the grid traversal down and you're comfortable with that sub-box indexing formula `(row / 3) * 3 + (col / 3)`, you'll be ready for more complex matrix problems—including the full Sudoku Solver algorithm.
+
+The key takeaway? Iterate once, check three constraints, and use O(1) lookups. Keep it simple, and you'll be fine.

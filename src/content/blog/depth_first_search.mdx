@@ -1,0 +1,474 @@
+---
+title: "Depth First Search (DFS)"
+thumbnailText: "Depth First Search (DFS)"
+description: "Depth-first search (DFS) is one of those algorithms you'll see everywhere once you start looking: tree traversals, compilers, maze solvers, dependency resolution, finding Strongly Connected Components (SCCs)."
+date: "2025-01-15"
+tags: ["depth-first-search", "algorithm", "data-structures", "graph-algorithms", "tree-traversal"]
+cover: ""
+author: "Kailas Mahavarkar"
+authorUsername: "kailas-mahavarkar"
+authorLinkedIn: "https://www.linkedin.com/in/kailasmahavarkar/"
+words: []
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-3-pro-preview"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "google/gemini-3-pro-preview"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import DFSTreeTraversal from "@components/examples/depth-first-search/DFSTreeTraversal";
+import DFSGraphTraversal from "@components/examples/depth-first-search/DFSGraphTraversal";
+import DFSMazePathfinding from "@components/examples/depth-first-search/DFSMazePathfinding";
+import { YouTube } from "astro-embed";
+
+# Depth First Search (DFS) – From Trees to Mazes
+
+**Depth-first search (DFS)** is one of those algorithms you'll see everywhere once you start looking: tree traversals, compilers, maze solvers, dependency resolution, finding Strongly Connected Components (SCCs)—the list goes on.
+
+Here's the core idea:
+
+> Start somewhere, keep going deeper until you can't, then backtrack and try the next option.
+
+That's it. This "go deep, then backtrack" pattern is so fundamental that once you really get it, a whole bunch of graph and tree problems suddenly click into place.
+
+---
+
+## Real-World Analogy
+
+<Notation type="box" color="red" padding={10} strokeWidth={2}>
+🔍 <strong>Real-World Analogy – Exploring a Maze</strong><br/><br/>
+Think about exploring a huge maze. Your strategy is simple:<br/>
+1. Always take the <strong>left-most unexplored corridor</strong>.<br/>
+2. Follow it until you hit a dead-end.<br/>
+3. Walk back (backtrack) to the last junction that still has unexplored corridors.<br/>
+4. Repeat until you've tried every possible corridor.<br/><br/>
+That's DFS in a nutshell: <strong>go as deep as possible, then backtrack.</strong>
+</Notation>
+
+---
+
+## DFS on Trees – Preorder, Inorder, Postorder
+
+If you've worked with **trees**, you've probably already used DFS without even thinking about it. Those standard traversals—preorder, inorder, and postorder? They're all just DFS with different "visit timings."
+
+### Visualizing DFS on a Tree
+
+Here's an interactive tree DFS visualization. Try switching between traversal types to see how the order changes.
+
+## DFS on Trees (Interactive)
+
+<DFSTreeTraversal client:load />
+
+**Quick note:** When you're working with trees, you don't *strictly* need a `visited` set because trees don't have cycles. But if you're representing the tree as an undirected graph, you'll want to make sure you don't immediately traverse back to the parent node. For general graphs? A `visited` set is absolutely mandatory.
+
+---
+
+## Core DFS Concepts
+
+<Notation type="highlight" color="rgba(255, 235, 59, 0.4)" padding={10} strokeWidth={2}>
+<strong>Key Concept</strong>: DFS explores <strong>deep</strong> along one path before trying alternatives. It must track <code>visited</code> nodes in graphs to avoid infinite loops caused by cycles.
+</Notation>
+
+For a graph `G = (V, E)` and a starting node `s`, the recursive DFS template looks like this:
+
+1. Mark `s` as visited.
+2. For each neighbor `v` of `s`:
+   - If `v` isn't visited, recursively DFS from `v`.
+
+In pseudo-code:
+
+```text
+dfs(u):
+    visited[u] = true
+    for each v in adj[u]:
+        if not visited[v]:
+            dfs(v)
+```
+
+This simple pattern is the backbone for:
+
+- Topological sorting
+- Cycle detection
+- Finding Strongly Connected Components (SCCs)
+- Finding bridges and articulation points
+- Reachability queries
+
+Pretty versatile, right?
+
+---
+
+## DFS on Graphs – Interactive Traversal
+
+Let's make this concrete with a small graph.
+
+## DFS on a Graph (Interactive)
+
+<DFSGraphTraversal client:load />
+
+Try clicking a start node (if supported) and watch:
+
+- The **order** in which nodes get visited.
+- How DFS commits to one branch all the way down.
+- How it **backtracks** to explore remaining neighbors.
+
+### Step-by-Step Example
+
+Consider this undirected graph:
+
+```text
+0: 1, 2
+1: 0, 2
+2: 0, 1, 3, 4
+3: 2
+4: 2
+```
+
+Let's run DFS starting at `0`, processing neighbors in ascending numerical order:
+
+1. Start at **0** → mark `0` visited. Order: `[0]`.
+2. Go to first unvisited neighbor: **1** → mark `1` visited. Order: `[0, 1]`.
+3. From 1, go to unvisited neighbor: **2** → mark `2` visited. Order: `[0, 1, 2]`.
+4. From 2, go to **3** → mark `3` visited. Order: `[0, 1, 2, 3]`.
+   - Node 3 has no unvisited neighbors (2 is already visited) → backtrack to 2.
+5. From 2, next unvisited neighbor: **4** → mark `4` visited. Order: `[0, 1, 2, 3, 4]`.
+   - Node 4 has no unvisited neighbors → backtrack to 2 → backtrack to 1 → backtrack to 0.
+6. All neighbors of 0 are processed → we're done.
+
+Different **neighbor orderings** will give you different (but equally valid) DFS traversal orders.
+
+---
+
+## Implementation: DFS on an Adjacency List
+
+We'll implement **recursive DFS** using an adjacency list for an unweighted graph. We'll also handle **disconnected graphs** by iterating over all vertices to make sure we visit every component.
+
+### Code: Java, C++, and Python
+
+<CodeTabs
+  tabLabels={["Java", "C++", "Python"]}
+  tabs={{
+    java: injectCode(`
+      import java.util.*;
+
+      public class DFSExample {
+          static void dfs(int u, List<List<Integer>> adj, boolean[] visited, List<Integer> order) {
+              visited[u] = true;
+              order.add(u);
+
+              for (int v : adj.get(u)) {
+                  if (!visited[v]) {
+                      dfs(v, adj, visited, order);
+                  }
+              }
+          }
+
+          // Runs DFS for all components and returns overall traversal order
+          static List<Integer> dfsAllComponents(List<List<Integer>> adj) {
+              int n = adj.size();
+              boolean[] visited = new boolean[n];
+              List<Integer> order = new ArrayList<>();
+
+              for (int i = 0; i < n; i++) {
+                  if (!visited[i]) {
+                      dfs(i, adj, visited, order);
+                  }
+              }
+              return order;
+          }
+
+          public static void main(String[] args) {
+              // Example graph:
+              // 0: 1,2
+              // 1: 0,2
+              // 2: 0,1,3,4
+              // 3: 2
+              // 4: 2
+              int n = 5;
+              List<List<Integer>> adj = new ArrayList<>();
+              for (int i = 0; i < n; i++) {
+                  adj.add(new ArrayList<>());
+              }
+
+              // Undirected edges
+              addEdge(adj, 0, 1);
+              addEdge(adj, 0, 2);
+              addEdge(adj, 1, 2);
+              addEdge(adj, 2, 3);
+              addEdge(adj, 2, 4);
+
+              List<Integer> order = dfsAllComponents(adj);
+              System.out.println("DFS order: " + order);
+          }
+
+          static void addEdge(List<List<Integer>> adj, int u, int v) {
+              adj.get(u).add(v);
+              adj.get(v).add(u);
+          }
+      }
+    `),
+    cpp: injectCode(`
+      #include <iostream>
+      #include <vector>
+      #include <algorithm>
+
+      using namespace std;
+
+      void dfs(int u, const vector<vector<int>>& adj,
+               vector<bool>& visited, vector<int>& order) {
+          visited[u] = true;
+          order.push_back(u);
+
+          for (int v : adj[u]) {
+              if (!visited[v]) {
+                  dfs(v, adj, visited, order);
+              }
+          }
+      }
+
+      vector<int> dfsAllComponents(const vector<vector<int>>& adj) {
+          int n = (int)adj.size();
+          vector<bool> visited(n, false);
+          vector<int> order;
+
+          for (int i = 0; i < n; i++) {
+              if (!visited[i]) {
+                  dfs(i, adj, visited, order);
+              }
+          }
+          return order;
+      }
+
+      int main() {
+          // Same graph as in Java example
+          int n = 5;
+          vector<vector<int>> adj(n);
+
+          auto addEdge = [&](int u, int v) {
+              adj[u].push_back(v);
+              adj[v].push_back(u);
+          };
+
+          addEdge(0, 1);
+          addEdge(0, 2);
+          addEdge(1, 2);
+          addEdge(2, 3);
+          addEdge(2, 4);
+
+          vector<int> order = dfsAllComponents(adj);
+
+          cout << "DFS order: ";
+          for (int x : order) cout << x << ' ';
+          cout << "\\n";
+
+          return 0;
+      }
+    `),
+    python: injectCode(`
+      from collections import defaultdict
+      from typing import Dict, List, Set
+
+      def dfs(u: int, graph: Dict[int, List[int]],
+              visited: Set[int], order: List[int]) -> None:
+          visited.add(u)
+          order.append(u)
+
+          for v in graph[u]:
+              if v not in visited:
+                  dfs(v, graph, visited, order)
+
+      def dfs_all_components(graph: Dict[int, List[int]]) -> List[int]:
+          visited: Set[int] = set()
+          order: List[int] = []
+
+          # Iterate over all keys in the dictionary to handle components
+          for u in list(graph.keys()):
+              if u not in visited:
+                  dfs(u, graph, visited, order)
+          return order
+
+      if __name__ == "__main__":
+          graph: Dict[int, List[int]] = defaultdict(list)
+
+          def add_edge(u: int, v: int) -> None:
+              graph[u].append(v)
+              graph[v].append(u)
+
+          add_edge(0, 1)
+          add_edge(0, 2)
+          add_edge(1, 2)
+          add_edge(2, 3)
+          add_edge(2, 4)
+
+          order = dfs_all_components(graph)
+          print("DFS order:", order)
+    `)
+  }}
+/>
+
+### Iterative DFS with an Explicit Stack
+
+Instead of relying on recursion (which uses the system call stack), you can maintain your own **explicit stack**. This is especially useful for really deep graphs where recursion might cause a `StackOverflowError`.
+
+```text
+stack = [start]
+visited = set()
+
+while stack not empty:
+    u = stack.pop()
+    if u is not visited:
+        mark u visited
+        push all unvisited neighbors of u onto stack
+```
+
+*Pro tip: To exactly replicate the order of a recursive DFS, you should push neighbors onto the stack in reverse order.*
+
+---
+
+## DFS in Mazes and Pathfinding
+
+Fun fact: a DFS-like method was used way back in the 19th century by a guy named Trémaux to solve mazes.
+
+DFS will find **a** path from start to goal if one exists—but it won't necessarily find the **shortest** one.
+
+## DFS in a Maze (Interactive)
+
+<DFSMazePathfinding client:load />
+
+Try:
+- Changing start/end points (if supported).
+- Watching how DFS commits to one corridor until it hits a wall, then backtracks.
+
+This approach works great when:
+- Any valid path is acceptable.
+- The search space is large and deep, but branching is limited.
+
+If you need the **shortest path** in an unweighted grid or graph, you'll want **BFS** (Breadth-First Search), not DFS.
+
+---
+
+## Video Explanation
+
+If you're more of a visual learner, here's a solid short explanation of DFS on graphs:
+
+## DFS Video Walkthrough
+
+<YouTube id="7fujbpJ0LB4" class="my-6" />
+
+---
+
+## Complexity Analysis
+
+For an explicit graph with `V` vertices and `E` edges:
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+<strong>Time Complexity</strong>: O(V + E)<br/>
+Each vertex and each edge gets processed at most once (twice in undirected graphs, once per direction).<br/><br/>
+<strong>Space Complexity</strong>: O(V)<br/>
+You need this for the <code>visited</code> array and the recursion stack (or explicit stack).
+</Notation>
+
+For **implicit graphs** (like game trees) where neighbors are generated on the fly:
+- **Time**: $O(b^d)$ where `b` is the branching factor and `d` is the depth.
+- **Space**: $O(b \cdot d)$ because DFS only keeps the current path and siblings at each level in memory.
+
+---
+
+## Important Properties and Edge Types
+
+When you run DFS on a directed graph, you're implicitly building a **DFS tree/forest**. Edges can be classified as:
+
+1.  **Tree Edge**: Used by DFS to discover a new unvisited node.
+2.  **Back Edge**: Points from a node to one of its ancestors in the DFS tree. **This indicates a cycle.**
+3.  **Forward Edge**: Points from a node to a descendant (that isn't a direct child).
+4.  **Cross Edge**: Connects two nodes where neither is an ancestor of the other (often between two different subtrees).
+
+In an **undirected** graph, every non-tree edge is effectively a **back edge**—forward and cross edges don't exist in that context.
+
+These classifications are super useful for:
+- Cycle detection
+- Topological sorting
+- Strongly Connected Components (Kosaraju, Tarjan)
+
+---
+
+## Practical Applications of DFS
+
+### 1. Reachability & Connectivity
+- "From node `s`, which nodes can I reach?"
+- "How many connected components does this graph have?"
+- This is exactly what our `dfsAllComponents` helper does.
+
+### 2. Topological Sorting (DAGs)
+- Run DFS on a **Directed Acyclic Graph (DAG)**.
+- Add each vertex to a list **when you finish it** (on exit, after processing all children).
+- Reverse this list to get a valid **topological order**.
+
+### 3. Cycle Detection
+- In a directed graph: A **back edge** pointing to a node currently in the recursion stack means you've got a cycle.
+- In an undirected graph: Finding an edge to an already-visited node that **isn't** the immediate parent indicates a cycle.
+
+### 4. Strongly Connected Components (SCCs)
+- **Kosaraju's Algorithm**:
+  1. Run DFS and record nodes in **postorder**.
+  2. Reverse all edges in the graph.
+  3. Run DFS again in the reverse order of step 1.
+  4. Each DFS tree found in step 3 is one SCC.
+
+### 5. Tree Algorithms
+- Calculating subtree sizes, depths, and parents.
+- Ancestor checks using entry/exit times.
+- Lowest Common Ancestor (LCA) preprocessing (Euler tour, binary lifting).
+
+---
+
+## Common Pitfalls and How to Avoid Them
+
+<Notation type="box" color="rgba(244, 67, 54, 0.15)" padding={10} strokeWidth={2}>
+⚠️ <strong>Common DFS Pitfalls</strong><br/><br/>
+1. <strong>Forgetting <code>visited</code>:</strong> Skip this and you'll get infinite recursion on cyclic graphs. Not fun.<br/>
+2. <strong>Marking <code>visited</code> too late:</strong> You've got to mark a node as visited <em>before</em> recursively calling its neighbors. If you mark it after the call returns, other branches can revisit the same node unnecessarily.<br/>
+3. <strong>Ignoring Disconnected Components:</strong> Just running <code>dfs(start_node)</code> only visits the component containing <code>start_node</code>. Loop through all nodes to cover the entire graph.<br/>
+4. <strong>Stack Overflow:</strong> Using recursion on extremely deep graphs (like a linked list of 100,000 nodes) can crash your program. Switch to an iterative stack approach for those cases.
+</Notation>
+
+---
+
+## When to Use DFS vs BFS
+
+**Use DFS when:**
+- You need to visit every node (like counting components).
+- You're solving problems that require **backtracking** (mazes, puzzles).
+- You're doing topological sorts, finding SCCs, or detecting cycles.
+- The graph is **deep and narrow**, making DFS more memory-efficient than BFS.
+
+**Use BFS when:**
+- You need the **shortest path** in an **unweighted** graph.
+- You want to find the minimum number of edges between two nodes.
+- You need a level-by-level traversal (like printing a tree level by level).
+
+---
+
+## Optimization Tips
+
+- **Data Structures**: Use an **adjacency list** for sparse graphs ($E \approx V$). Avoid adjacency matrices ($O(V^2)$ space) unless the graph is dense ($E \approx V^2$).
+- **Determinism**: Sort adjacency lists once if you need a repeatable traversal order. This is crucial for debugging and writing test cases.
+- **Early Termination**: When you're searching for a specific target, return immediately upon finding it—no need to keep going.
+
+---
+
+## Conclusion
+
+DFS is one of those fundamental tools you'll keep coming back to:
+
+- It explores **depth-first**, backtracking when it gets stuck.
+- It runs in **O(V + E)** time and **O(V)** space.
+- It has both **recursive** and **iterative** implementations.
+- It's the foundation for complex algorithms like topological sorting, SCC finding, and maze solving.
+
+Once you're comfortable with the DFS pattern—managing visited sets, recursion/stacks, and entry/exit times—a whole bunch of graph and tree problems become way more approachable.

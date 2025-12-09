@@ -6,7 +6,6 @@ var childrenSupport = ({ addVariant }) => {
 	addVariant("child-hover", "& > *:hover");
 };
 
-const lightThemeName = "light";
 const darkThemeName = "dark";
 
 module.exports = {
@@ -24,29 +23,29 @@ module.exports = {
 			},
 		},
 	},
-	plugins: [require("@tailwindcss/typography"), require("daisyui"), childrenSupport],
-	daisyui: {
-		themes: [
-			{
-				light: {
-					...require("daisyui/src/theming/themes")["light"],
-				},
+	plugins: [require("@tailwindcss/typography"), childrenSupport],
+	// daisyui: {
+	// 	themes: [
+	// 		{
+	// 			light: {
+	// 				...require("daisyui/src/theming/themes")["light"],
+	// 			},
 
-				dark: {
-					...require("daisyui/src/theming/themes")["forest"],
-					// "color-scheme": "dark",
-					// primary: "oklch(65.69% 0.196 275.75)",
-					// secondary: "oklch(74.8% 0.26 342.55)",
-					// accent: "oklch(74.51% 0.167 183.61)",
-					// neutral: "#2a323c",
-					// "neutral-content": "#A6ADBB",
-					"base-100": "#0b0c0e",
-					"base-200": "#0d0f12",
-                    "base-content": "#D7DDE4",
-					"base-300": "#090A0C",
-					// "base-content": "#A6ADBB",
-				},
-			},
-		],
-	},
+	// 			dark: {
+	// 				...require("daisyui/src/theming/themes")["forest"],
+	// 				// "color-scheme": "dark",
+	// 				// primary: "oklch(65.69% 0.196 275.75)",
+	// 				// secondary: "oklch(74.8% 0.26 342.55)",
+	// 				// accent: "oklch(74.51% 0.167 183.61)",
+	// 				// neutral: "#2a323c",
+	// 				// "neutral-content": "#A6ADBB",
+	// 				"base-100": "#0b0c0e",
+	// 				"base-200": "#0d0f12",
+    //                 "base-content": "#D7DDE4",
+	// 				"base-300": "#090A0C",
+	// 				// "base-content": "#A6ADBB",
+	// 			},
+	// 		},
+	// 	],
+	// },
 };

@@ -1,0 +1,589 @@
+---
+blogid: "a64dae97"
+title: "347. Top K Frequent Elements"
+description: "Master LeetCode's Top K Frequent Elements problem with expert insights into optimal O(N) bucket sort, efficient O(N log K) min-heap, and advanced quickselect solutions for finding the most frequent items in an array."
+date: "2025-12-01"
+modifiedDate: "2025-12-01"
+tags: ["algorithm", "data-structures", "hashmap", "heap", "bucket-sort"]
+thumbnailText: "Top K Frequent"
+words: ["topk", "frequent", "elements", "array", "leetcode", "algorithm", "datastructures", "hashmap", "dictionary", "frequency", "count", "heap", "priorityqueue", "minheap", "bucketsort", "quickselect", "timecomplexity", "spacecomplexity", "optimization", "python", "java", "cpp", "interview", "codingchallenge", "selection", "sorting", "efficient", "linear"]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4.5-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-2-flash"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "anthropic/claude-4.5-sonnet"
+---
+import { injectCode } from "@src/utils/blog-utils";
+import TopKFrequentHashMap from "@components/examples/347.-top-k-frequent-elements/TopKFrequentHashMap";
+import TopKFrequentBucketSort from "@components/examples/347.-top-k-frequent-elements/TopKFrequentBucketSort";
+import TopKFrequentHeap from "@components/examples/347.-top-k-frequent-elements/TopKFrequentHeap";
+
+# 347. Top K Frequent Elements: A Comprehensive Guide
+
+LeetCode 347, "Top K Frequent Elements," is one of those problems that looks deceptively simple at first glance. You're given an array of integers and asked to return the `k` most frequent elements. Easy, right? Well, here's the catch - the problem explicitly wants you to beat O(N log N) time complexity. That's where things get interesting.
+
+This constraint pushes you beyond basic sorting into some genuinely elegant algorithmic territory. We'll explore multiple solutions, each with its own trade-offs and sweet spots.
+
+## Problem Definition and Understanding
+
+### What We're Actually Solving
+
+Given an array `nums` and an integer `k`, find the `k` numbers that appear most often.
+
+Let's look at a couple examples:
+- `nums = [1,1,1,2,2,3]` and `k = 2`: The number `1` shows up 3 times, `2` appears twice, and `3` appears once. So we return `[1,2]`.
+- `nums = [1]` and `k = 1`: Just return `[1]`.
+
+Pretty straightforward, but there's more to unpack.
+
+### The Fine Print
+
+- Array length can go up to `10^5` (that's 100,000 elements)
+- Values range from `-10^4` to `10^4`
+- `k` is always valid (between 1 and the number of unique elements)
+- The answer is *guaranteed to be unique* - no ambiguous tie-breaking needed
+- **Most importantly**: Your solution must be faster than O(N log N)
+
+That last point is the real kicker. It's basically the problem saying "don't just sort everything by frequency."
+
+<Notation type="highlight" color="rgba(255, 235, 59, 0.4)" padding={8}>
+**Key Insight**: Every solution boils down to two steps: **count the frequencies**, then **pick the top k**.
+</Notation>
+
+## The Building Blocks
+
+Before we jump into fancy algorithms, let's talk about what *every* solution needs.
+
+### Step 1: Counting Frequencies
+
+No matter which approach you pick, you'll start by counting how many times each number appears. A **hash map** (dictionary, hash table - whatever you want to call it) is perfect for this:
+- Maps each unique number to its count
+- O(1) lookups and insertions (on average)
+- One pass through the array gets you the full frequency map in O(N) time
+
+### Step 2: Finding the Top K
+
+Once you've got your frequencies, you need to efficiently select the `k` highest ones. This is the classic "top-k" problem, and it's where different data structures really shine (or fall flat).
+
+<Notation type="box" color="red" padding={10}>
+**Real-World Analogy**: Think about Amazon's "Top Sellers" list. First, they count how many of each product sold (frequency counting). Then they identify the top-selling items (selecting top k). Same pattern.
+</Notation>
+
+## Solution Approaches
+
+Let's walk through four different ways to solve this, from the most practical to the most theoretically optimal.
+
+### Approach 1: Min-Heap (Priority Queue)
+
+Here's something that trips people up: we use a *min*-heap to find the *max* frequencies. Sounds backwards, right? But it's actually brilliant.
+
+#### The VIP Room Analogy
+
+Picture a VIP lounge that can only fit `k` people. Everyone has a popularity score (their frequency).
+
+Here's how it works:
+1. People try to enter the lounge one by one
+2. If there's space (fewer than `k` people inside), they get in
+3. If it's full, we compare the newcomer to the *least popular* person currently inside
+4. If the newcomer is more popular, we kick out the least popular person and let the newcomer in
+5. Otherwise, the newcomer gets turned away
+
+By the end, you're guaranteed to have the `k` most popular people in the lounge.
+
+The min-heap always keeps the *least popular* person at the top, making it super efficient to decide who to kick out.
+
+#### How It Works
+
+1. **Count frequencies** using a hash map
+2. **Build a min-heap** of size `k`:
+   - For each (number, frequency) pair, add it to the heap
+   - If the heap size exceeds `k`, remove the smallest frequency
+3. **Extract results** - whatever's left in the heap is your answer
+
+#### Visualization: Min-Heap Approach
+
+Watch how the min-heap maintains the top `k` elements dynamically:
+
+<TopKFrequentHeap client:load />
+
+#### Implementation
+
+<CodeTabs
+    tabLabels={["Java", "C++", "Python"]}
+    tabs={{
+        'java': injectCode(`
+import java.util.*;
+
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        // Step 1: Count frequencies
+        Map<Integer, Integer> count = new HashMap<>();
+        for (int num : nums) {
+            count.put(num, count.getOrDefault(num, 0) + 1);
+        }
+
+        // Step 2: Build a min-heap of size k
+        // Store pairs as (frequency, number)
+        // The comparator ensures it's a min-heap based on frequency
+        PriorityQueue<Map.Entry<Integer, Integer>> minHeap = new PriorityQueue<>(
+            (a, b) -> a.getValue() - b.getValue()
+        );
+
+        for (Map.Entry<Integer, Integer> entry : count.entrySet()) {
+            minHeap.offer(entry);
+            if (minHeap.size() > k) {
+                minHeap.poll(); // Kick out the least frequent element
+            }
+        }
+
+        // Step 3: Extract results from the heap
+        int[] ans = new int[k];
+        for (int i = k - 1; i >= 0; --i) {
+            ans[i] = minHeap.poll().getKey();
+        }
+        return ans;
+    }
+}
+        `),
+        'cpp': injectCode(`
+#include <vector>
+#include <unordered_map>
+#include <queue>
+#include <utility>
+
+struct CompareEntry {
+    bool operator()(const std::pair<int, int>& a, const std::pair<int, int>& b) {
+        // Min-heap based on frequency (second element of pair)
+        return a.second > b.second;
+    }
+};
+
+class Solution {
+public:
+    std::vector<int> topKFrequent(std::vector<int>& nums, int k) {
+        // Step 1: Count frequencies
+        std::unordered_map<int, int> count;
+        for (int num : nums) {
+            count[num]++;
+        }
+
+        // Step 2: Build a min-heap of size k
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, CompareEntry> minHeap;
+
+        for (auto const& [num, freq] : count) {
+            minHeap.push({num, freq});
+            if (minHeap.size() > k) {
+                minHeap.pop();
+            }
+        }
+
+        // Step 3: Extract results
+        std::vector<int> ans;
+        while (!minHeap.empty()) {
+            ans.push_back(minHeap.top().first);
+            minHeap.pop();
+        }
+        return ans;
+    }
+};
+        `),
+        'python': injectCode(`
+import heapq
+from collections import Counter
+
+class Solution:
+    def topKFrequent(self, nums: list[int], k: int) -> list[int]:
+        # Step 1: Count frequencies
+        count = Counter(nums)
+
+        # Step 2: Build a min-heap of size k
+        min_heap = []
+
+        for num, freq in count.items():
+            heapq.heappush(min_heap, (freq, num))
+            if len(min_heap) > k:
+                heapq.heappop(min_heap)
+
+        # Step 3: Extract results
+        ans = []
+        while min_heap:
+            ans.append(heapq.heappop(min_heap)[1])
+        return ans
+        `)
+    }}
+/>
+
+#### Complexity Analysis
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Time Complexity**: O(N log K)
+</Notation>
+
+Breaking it down:
+- Counting frequencies: O(N)
+- Heap operations: For each of M unique elements, we do a heap push/pop. Each operation is O(log K). So that's O(M log K)
+- Total: O(N + M log K), which simplifies to O(N log K) since M ≤ N
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Space Complexity**: O(N)
+</Notation>
+
+- Hash map: O(M) where M is unique elements
+- Min-heap: O(K)
+- Total: O(N) in the worst case
+
+#### When to Use This
+
+The min-heap approach shines when `k` is much smaller than the total number of unique elements. It's also a pattern that interviewers love because it shows you understand heap mechanics. If you can only remember one solution for an interview, make it this one.
+
+### Approach 2: Bucket Sort
+
+Now we're talking. Bucket sort gives us *true* linear time - O(N) - by exploiting a clever observation: frequencies are bounded by the array size.
+
+#### The Frequency Shelves
+
+Imagine you've got a set of shelves, each labeled with a number (0, 1, 2, ... up to N).
+
+1. Count how often each item appears
+2. Place each item on the shelf matching its frequency (item appearing 3 times goes on shelf #3)
+3. To find the top `k` items, start from the highest shelf and grab items until you have `k` of them
+
+The maximum possible frequency is N (if every element is the same), so you only need N+1 shelves total.
+
+#### How It Works
+
+1. **Count frequencies** with a hash map
+2. **Create buckets** - an array of lists with size N+1
+3. **Distribute to buckets** - put each number in the bucket corresponding to its frequency
+4. **Collect top K** - iterate from the highest bucket down, grabbing elements until you have `k`
+
+#### Visualization: Bucket Sort Approach
+
+See how elements get sorted into frequency buckets:
+
+<TopKFrequentBucketSort client:load />
+
+#### Implementation
+
+<CodeTabs
+    tabLabels={["Java", "C++", "Python"]}
+    tabs={{
+        'java': injectCode(`
+import java.util.*;
+
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        // Step 1: Count frequencies
+        Map<Integer, Integer> count = new HashMap<>();
+        for (int num : nums) {
+            count.put(num, count.getOrDefault(num, 0) + 1);
+        }
+
+        // Step 2: Create buckets (array of lists)
+        // Index = frequency, max frequency = nums.length
+        List<Integer>[] buckets = new List[nums.length + 1];
+        for (int i = 0; i < buckets.length; i++) {
+            buckets[i] = new ArrayList<>();
+        }
+
+        // Step 3: Distribute numbers into buckets
+        for (Map.Entry<Integer, Integer> entry : count.entrySet()) {
+            int num = entry.getKey();
+            int freq = entry.getValue();
+            buckets[freq].add(num);
+        }
+
+        // Step 4: Collect top K from highest frequency down
+        List<Integer> ans = new ArrayList<>();
+        for (int i = buckets.length - 1; i >= 0 && ans.size() < k; i--) {
+            for (int num : buckets[i]) {
+                ans.add(num);
+                if (ans.size() == k) {
+                    return ans.stream().mapToInt(Integer::intValue).toArray();
+                }
+            }
+        }
+        return ans.stream().mapToInt(Integer::intValue).toArray();
+    }
+}
+        `),
+        'cpp': injectCode(`
+#include <vector>
+#include <unordered_map>
+
+class Solution {
+public:
+    std::vector<int> topKFrequent(std::vector<int>& nums, int k) {
+        // Step 1: Count frequencies
+        std::unordered_map<int, int> count;
+        for (int num : nums) {
+            count[num]++;
+        }
+
+        // Step 2: Create buckets
+        std::vector<std::vector<int>> buckets(nums.size() + 1);
+
+        // Step 3: Distribute into buckets
+        for (auto const& [num, freq] : count) {
+            buckets[freq].push_back(num);
+        }
+
+        // Step 4: Collect top K
+        std::vector<int> ans;
+        for (int i = nums.size(); i >= 0 && ans.size() < k; --i) {
+            for (int num : buckets[i]) {
+                ans.push_back(num);
+                if (ans.size() == k) {
+                    return ans;
+                }
+            }
+        }
+        return ans;
+    }
+};
+        `),
+        'python': injectCode(`
+from collections import Counter
+
+class Solution:
+    def topKFrequent(self, nums: list[int], k: int) -> list[int]:
+        # Step 1: Count frequencies
+        count = Counter(nums)
+
+        # Step 2: Create buckets
+        buckets = [[] for _ in range(len(nums) + 1)]
+
+        # Step 3: Distribute into buckets
+        for num, freq in count.items():
+            buckets[freq].append(num)
+
+        # Step 4: Collect top K
+        ans = []
+        for i in range(len(buckets) - 1, 0, -1):
+            for num in buckets[i]:
+                ans.append(num)
+                if len(ans) == k:
+                    return ans
+        return ans
+        `)
+    }}
+/>
+
+#### Complexity Analysis
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Time Complexity**: O(N)
+</Notation>
+
+Here's the breakdown:
+- Counting: O(N)
+- Distributing to buckets: O(M) for M unique elements
+- Collecting results: O(N) worst case (each element visited once across all buckets)
+- **Total: O(N)** - can't beat that!
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Space Complexity**: O(N)
+</Notation>
+
+- Hash map: O(M)
+- Buckets array: O(N)
+- Total: O(N)
+
+#### Why Bucket Sort Wins
+
+This approach is theoretically optimal for this problem because:
+- It achieves true O(N) time
+- No comparisons needed - just direct indexing
+- The bounded frequency range (0 to N) is perfectly exploited
+
+### Approach 3: Quickselect
+
+Quickselect is the dark horse of this problem. It's based on the same partitioning logic as Quicksort, but instead of sorting everything, it just finds the k-th element.
+
+#### The Basic Idea
+
+1. Count frequencies (same as always)
+2. Convert unique numbers to an array
+3. Use partitioning to rearrange elements by frequency
+4. Find the element at position (N_unique - k) - everything to its right will be the top k
+
+The beauty is that you don't need to fully sort - you just keep partitioning until you've isolated the top k elements.
+
+#### Implementation (Conceptual)
+
+```python
+import random
+from collections import Counter
+
+class Solution:
+    def topKFrequent(self, nums: list[int], k: int) -> list[int]:
+        count = Counter(nums)
+        unique_elements = list(count.keys())
+        n_unique = len(unique_elements)
+
+        def quickselect(left, right, target_idx):
+            if left == right:
+                return
+
+            # Pick random pivot
+            pivot_idx = random.randint(left, right)
+            pivot_freq = count[unique_elements[pivot_idx]]
+
+            # Move pivot to end
+            unique_elements[pivot_idx], unique_elements[right] = unique_elements[right], unique_elements[pivot_idx]
+
+            # Partition: move smaller frequencies left
+            store_idx = left
+            for i in range(left, right):
+                if count[unique_elements[i]] < pivot_freq:
+                    unique_elements[store_idx], unique_elements[i] = unique_elements[i], unique_elements[store_idx]
+                    store_idx += 1
+
+            # Move pivot to final position
+            unique_elements[right], unique_elements[store_idx] = unique_elements[store_idx], unique_elements[right]
+
+            if target_idx == store_idx:
+                return
+            elif target_idx < store_idx:
+                quickselect(left, store_idx - 1, target_idx)
+            else:
+                quickselect(store_idx + 1, right, target_idx)
+
+        # Find the (n_unique - k)th element
+        # Everything from that position to the end will be our top k
+        quickselect(0, n_unique - 1, n_unique - k)
+        return unique_elements[n_unique - k:]
+```
+
+#### Complexity Analysis
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Time Complexity**: O(N) average, O(N²) worst case
+</Notation>
+
+- Counting: O(N)
+- Quickselect: O(M) average, O(M²) worst case
+- Total: O(N) average, but that worst case can bite you
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Space Complexity**: O(N)
+</Notation>
+
+#### When to Use This
+
+Quickselect is powerful, but its worst-case behavior and complexity make it less popular for this specific problem. It's fantastic for finding medians or k-th values in general, though.
+
+### Approach 4: Hash Map + Sorting (The Straightforward Way)
+
+This is what you'd do if there were no time complexity constraints. It's simple but usually too slow.
+
+#### The Process
+
+1. Count frequencies with a hash map
+2. Convert to a list of (number, frequency) pairs
+3. Sort by frequency (descending)
+4. Take the first k elements
+
+#### Visualization: Hash Map Approach
+
+Here's the frequency counting step that all approaches share:
+
+<TopKFrequentHashMap client:load />
+
+#### Complexity Analysis
+
+<Notation type="underline" color="orange" strokeWidth={2}>
+{'**Time Complexity**: O(N log N)'}
+</Notation>
+
+- Counting: O(N)
+- Sorting: O(M log M) where M is unique elements
+- In worst case, M = N, so we get O(N log N)
+
+This violates the problem's requirement for better than O(N log N).
+
+<Notation type="underline" color="purple" strokeWidth={2} padding={5}>
+**Space Complexity**: O(N)
+</Notation>
+
+#### When to Skip This
+
+Don't use this when the problem explicitly wants better than O(N log N), or when you're dealing with massive datasets.
+
+## Choosing Your Weapon
+
+Here's the quick reference guide:
+
+| Approach       | Time Complexity       | Space Complexity | When to Use                                   |
+| :------------- | :-------------------- | :--------------- | :-------------------------------------------- |
+| **Bucket Sort** | O(N)                  | O(N)             | Best overall - guaranteed linear time         |
+| **Min-Heap**   | O(N log K)            | O(N)             | When `k << N`, great for interviews             |
+| **Quickselect** | O(N) avg, O(N²) worst | O(N)             | Average O(N) but risky worst case             |
+| **Sorting**    | O(N log N)            | O(N)             | Simple but too slow for this problem          |
+
+<Notation type="box" color="green" padding={10}>
+💡 **My Take**: For this problem specifically, **Bucket Sort** is the cleanest and most optimal. But if you're in an interview and bucket sort feels tricky, the **Min-Heap** approach is totally solid and well-understood.
+</Notation>
+
+## Edge Cases Worth Checking
+
+### What About Ties?
+
+The problem guarantees a unique answer, so you won't have ambiguous tie situations. If ties were possible and needed specific handling (like lexicographical order), you'd need to adjust your comparisons accordingly.
+
+### Boundary Conditions
+
+- **Single element array**: `[1], k=1` → returns `[1]` ✓
+- **k equals all unique elements**: Everything gets returned ✓
+- **All same elements**: `[5,5,5,5], k=1` → returns `[5]` ✓
+
+All approaches handle these naturally.
+
+## Writing Clean Code
+
+### Language-Specific Tips
+
+- **Python**: Use `collections.Counter` for frequency counting. The `heapq` module handles min-heaps nicely.
+- **Java**: `HashMap` + `PriorityQueue` with a custom `Comparator`
+- **C++**: `unordered_map` + `priority_queue` (you'll need a custom comparator struct)
+
+### General Best Practices
+
+- Use clear variable names (`count`, `freq`, `bucket`)
+- Separate frequency counting from selection logic
+- Comment the tricky parts (especially custom comparators)
+- Don't create unnecessary intermediate structures
+
+## Related Problems You'll Love
+
+Once you've got this down, try these:
+
+- **692. Top K Frequent Words**: Same idea but with strings and lexicographical ordering
+- **Kth Largest Element in an Array**: Perfect for practicing Quickselect
+- **Design Twitter**: System design problem that often involves finding trending topics (top k pattern!)
+- **Streaming Data**: Look into Count-Min Sketch for approximate top-k with limited memory
+
+## The Big Picture
+
+Let me wrap this up with the key insights:
+
+1. **It's always two steps**: Count frequencies, then select top k. Every approach follows this pattern.
+
+2. **Bucket sort is king** for this specific problem. When your "scores" (frequencies) are bounded by a known max (N), bucket sort gives you true O(N) time.
+
+3. **Min-heap is your interview friend**. It's O(N log K), well-understood, and works great when k is small.
+
+4. **Quickselect is powerful but risky**. Average O(N) is great, but that O(N²) worst case can hurt.
+
+5. **Don't just sort everything**. The problem's pushing you toward smarter selection algorithms for a reason.
+
+Understanding these approaches doesn't just help you solve this problem - it gives you a toolkit for tackling frequency analysis and top-k challenges across algorithms and system design. And trust me, you'll see this pattern *everywhere*.

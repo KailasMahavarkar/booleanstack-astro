@@ -1,3 +1,5 @@
+@import './tail.css';
+
 html,
 body {
 	content-visibility: auto;
@@ -78,7 +80,7 @@ svg.rough-annotation {
 
 code {
 	font-weight: normal;
-	@apply bg-violet-100 rounded-md w-full;
+	/* @apply dark:bg-red-500 bg-gray-200 rounded-md w-full; */
 }
 
 #themeToggle {

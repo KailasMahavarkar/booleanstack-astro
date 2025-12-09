@@ -1,0 +1,244 @@
+---
+blogid: "fb9975d4"
+title: "167. Two Sum II - Input Array Is Sorted"
+description: "Master the efficient Two Pointer technique to solve the sorted Two Sum problem in linear time and constant space."
+date: "2025-12-05"
+modifiedDate: "2025-12-05"
+tags: ["two-pointers", "arrays", "binary-search", "leetcode", "algorithms"]
+thumbnailText: "Two Sum II Sorted"
+words:
+    [
+        "pointers",
+        "sorted",
+        "array",
+        "target",
+        "sum",
+        "linear",
+        "constant",
+        "space",
+        "complexity",
+        "indices",
+        "optimization",
+        "search",
+        "pair",
+        "complement",
+        "traversal",
+        "left",
+        "right",
+        "decrement",
+        "increment",
+        "iteration",
+    ]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+    visualization: "anthropic/claude-4.5-sonnet"
+    contextGathering:
+        - "openai/gpt-5.1"
+        - "anthropic/claude-4.5-sonnet"
+        - "google/gemini-3-pro-preview"
+    workflow:
+        synthesis: "google/gemini-3-pro-preview"
+        correction: "google/gemini-3-pro-preview"
+        humanization: "anthropic/claude-4.5-sonnet"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import { RoughNotation } from "react-rough-notation";
+import TwoSumTwoPointers from "@components/examples/167.-two-sum-ii---input-array-is-sorted/TwoSumTwoPointers";
+import TwoSumComparison from "@components/examples/167.-two-sum-ii---input-array-is-sorted/TwoSumComparison";
+import TwoSumInteractive from "@components/examples/167.-two-sum-ii---input-array-is-sorted/TwoSumInteractive";
+
+# Two Sum II - Input Array Is Sorted
+
+You've probably seen the classic **Two Sum** problem before—it's practically a rite of passage on LeetCode. Most people solve it with a Hash Map, getting that sweet $O(n)$ time complexity (though at the cost of $O(n)$ space).
+
+But here's where **Two Sum II** gets interesting. There's one critical difference: **the array is already sorted**. And that changes _everything_. We can toss the Hash Map aside completely and solve this with **constant $O(1)$ space** while _still_ keeping linear $O(n)$ time. It's the perfect introduction to the **Two Pointer** technique—a pattern you'll use again and again.
+
+## The Problem Statement
+
+You're given a **1-indexed** array of integers called `numbers` that's sorted in non-decreasing order. Your job? Find two numbers that add up to a specific `target`.
+
+**Here's what you need to know:**
+
+1.  Return the indices as `[index1, index2]` where both are 1-indexed.
+2.  $1 \le index1 < index2 \le numbers.length$ (the first index must come before the second).
+3.  You can't use the same element twice.
+4.  You must use only constant extra space (no Hash Maps this time!).
+
+## Real-World Analogy
+
+<RoughNotation client:only="react" type="box" show={true}>
+	Think of it like this: You've got a \$50 gift card and you're standing in front of a shelf
+	where products are arranged by price—cheapest on the left, most expensive on the right. You need
+	to buy exactly two items that total \$50.
+</RoughNotation>
+
+So you grab the cheapest item (left side) and the most expensive item (right side):
+
+- **If they cost more than $50**: Even the cheapest item makes the expensive one too pricey. Drop the expensive item and try the next one down.
+- **If they cost less than $50**: Even the most expensive item can't bring the cheap one up to $50. Drop the cheap item and try something pricier.
+
+You keep moving inward from both ends until you hit exactly $50. That's the Two Pointer technique in a nutshell.
+
+## Interactive Exploration
+
+Before we jump into code, try finding the target sum yourself with this interactive tool. Pay attention to how the sorted order basically tells you which way to move next.
+
+<TwoSumInteractive client:load />
+
+## The Optimal Approach: Two Pointers
+
+Sure, you _could_ use Brute Force ($O(n^2)$—yikes) or Binary Search ($O(n \log n)$—better, but not optimal). But when you've got a sorted array, the **Two Pointer** technique is the way to go.
+
+### How It Works
+
+Here's the game plan:
+
+1.  Start with two pointers: `left` at index `0` and `right` at the last index.
+2.  Add up the values at these two positions.
+3.  Now compare that sum to your target:
+    - **Perfect match?** You're done. Return `[left + 1, right + 1]` (remember the 1-indexing).
+    - **Sum too small?** You need bigger numbers. Since the array's sorted, move `left` to the right.
+    - **Sum too big?** You need smaller numbers. Move `right` to the left.
+4.  Keep going until the pointers meet.
+
+<RoughNotation type="highlight" show={true} color="rgba(255, 235, 59, 0.2)" padding={5}>
+	**The magic here**: You never have to backtrack. If `numbers[left] + numbers[right]` is too big,
+	then `numbers[right]` is too large to pair with *anything* from `left` onward. You can eliminate
+	it permanently and move on.
+</RoughNotation>
+
+### Visualizing the Algorithm
+
+Watch how the pointers close in on the answer:
+
+<TwoSumTwoPointers client:load />
+
+## Implementation
+
+Let's see this in action. Here's the code in Java, C++, and Python. Notice how we adjust for 1-based indexing in the return statement (just add 1 to our 0-based indices).
+
+<CodeTabs
+	tabLabels={["Java", "C++", "Python"]}
+	tabs={{
+		java: injectCode(`
+            class Solution {
+                public int[] twoSum(int[] numbers, int target) {
+                    // Start from both ends
+                    int left = 0;
+                    int right = numbers.length - 1;
+                    
+                    while (left < right) {
+                        int sum = numbers[left] + numbers[right];
+                        
+                        if (sum == target) {
+                            // Found it! Convert to 1-based indices
+                            return new int[]{left + 1, right + 1};
+                        } else if (sum < target) {
+                            // Need a bigger sum
+                            left++;
+                        } else {
+                            // Need a smaller sum
+                            right--;
+                        }
+                    }
+                    
+                    // We shouldn't get here (problem guarantees a solution exists)
+                    return new int[]{-1, -1};
+                }
+            }
+        `),
+		cpp: injectCode(`
+            class Solution {
+            public:
+                vector<int> twoSum(vector<int>& numbers, int target) {
+                    int left = 0;
+                    int right = numbers.size() - 1;
+                    
+                    while (left < right) {
+                        int sum = numbers[left] + numbers[right];
+                        
+                        if (sum == target) {
+                            // Convert to 1-based indices
+                            return {left + 1, right + 1};
+                        } else if (sum < target) {
+                            left++;
+                        } else {
+                            right--;
+                        }
+                    }
+                    
+                    return {};
+                }
+            };
+        `),
+		python: injectCode(`
+            class Solution:
+                def twoSum(self, numbers: List[int], target: int) -> List[int]:
+                    left, right = 0, len(numbers) - 1
+                    
+                    while left < right:
+                        current_sum = numbers[left] + numbers[right]
+                        
+                        if current_sum == target:
+                            # Convert to 1-based indices
+                            return [left + 1, right + 1]
+                        elif current_sum < target:
+                            # Need bigger numbers
+                            left += 1
+                        else:
+                            # Need smaller numbers
+                            right -= 1
+                            
+                    return []
+        `),
+	}}
+/>
+
+## Comparison of Approaches
+
+Why is Two Pointers better than the alternatives?
+
+Let's break it down:
+
+1.  **Brute Force**: Check every possible pair. That's $O(n^2)$. With inputs up to $3 \times 10^4$ elements, this'll time out faster than you can say "nested loop."
+2.  **Binary Search**: For each element, search for its complement (`target - element`). This gives you $O(n \log n)$. Not bad, but we can do better.
+3.  **Two Pointers**: Each element gets visited exactly once. That's $O(n)$—as good as it gets.
+
+<TwoSumComparison client:load />
+
+## Complexity Analysis
+
+<RoughNotation type="underline" show={true} color="#3b82f6" strokeWidth={2}>
+	**Time Complexity**: {"O(N)"}
+</RoughNotation>
+We traverse the array once, max. The `left` pointer only moves right, `right` only moves left. They
+meet somewhere in the middle, doing constant work at each step.
+
+<RoughNotation type="underline" show={true} color="#3b82f6" strokeWidth={2}>
+	**Space Complexity**: {"O(1)"}
+</RoughNotation>
+Just two integer variables for our pointers. That's it. Unlike the original Two Sum, we don't need a
+Hash Map because the sorted array *is* our lookup structure.
+
+## Common Pitfalls
+
+Watch out for these gotchas:
+
+1.  **1-Based Indexing**: The problem wants 1-based indices, but most languages (Java, Python, C++) use 0-based. Don't forget to **add 1** before returning your answer.
+2.  **Pointer Movement Logic**: Move `left` right when the sum's too small. Move `right` left when it's too big. Mix this up and you'll be debugging for a while.
+3.  **Integer Overflow**: Technically, `numbers[left] + numbers[right]` could overflow in C++ or Java. But the constraints ($-1000 \le numbers[i] \le 1000$) keep us safe here.
+
+## Conclusion
+
+**Two Sum II** is a textbook example of how constraints (in this case, a sorted array) can completely transform your approach. The **Two Pointer** technique gives us the best possible performance—both time _and_ space.
+
+<RoughNotation type="circle" show={true} color="#22c55e" padding={12} strokeWidth={2}>
+	💡 **Key takeaway**: Whenever you see "sorted array" in a problem, your brain should immediately
+	think "Two Pointers or Binary Search?"
+</RoughNotation>
+
+This pattern shows up _everywhere_—**3Sum**, **Container With Most Water**, **Trapping Rain Water**. Get comfortable with it here, and those tougher problems become a lot more manageable.

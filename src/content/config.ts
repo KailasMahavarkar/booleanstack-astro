@@ -19,6 +19,17 @@ const blog = defineCollection({
     author: z.string(),
     authorUsername: z.string(),
     authorLinkedIn: z.string().optional(),
+    thumbnailText: z.string().optional(),
+    words: z.array(z.string()).default([]),
+    modelConfig: z.object({
+      visualization: z.string(),
+      contextGathering: z.array(z.string()),
+      workflow: z.object({
+        synthesis: z.string(),
+        correction: z.string(),
+        humanization: z.string(),
+      }),
+    }),
   }),
 });
 

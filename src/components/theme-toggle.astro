@@ -7,18 +7,19 @@ import { Sun, Moon } from "@lucide/astro";
 	class=` flex items-center justify-center `
 	aria-label="Change color scheme"
 >
-	<Sun class="w-4 h-4 fill-current  hidden dark:block" />
-	<Moon class="w-4 h-4 fill-current dark:hidden" />
+	<Sun class="w-4 h-4 fill-current hidden dark:block" />
+	<Moon class="w-4 h-4 fill-current dark:hidden block" />
 </button>
 
 <script>
 	document.addEventListener("astro:page-load", () => {
+        const darkThemeName = "dark"
 		const theme = (() => {
 			if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
 				return localStorage.getItem("theme") || "light";
 			}
 			if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-				return "dark";
+				return darkThemeName;
 			}
 			return "light";
 		})();
@@ -29,7 +30,7 @@ import { Sun, Moon } from "@lucide/astro";
 
 		const handleToggleClick = () => {
 			const currentTheme = document.body.getAttribute("data-theme");
-			const newTheme = currentTheme === "light" ? "dark" : "light";
+			const newTheme = currentTheme === "light" ? darkThemeName : "light";
 
 			document.body.setAttribute("data-theme", newTheme);
 			localStorage.setItem("theme", newTheme);

@@ -1,0 +1,215 @@
+---
+blogid: "db8eb9bf"
+title: "49. Group Anagrams"
+description: "Master the art of grouping anagrams using hash maps and canonical representations to solve LeetCode 49 efficiently."
+date: "2025-11-30"
+modifiedDate: "2025-11-30"
+tags: ["algorithm", "data-structures", "hash-table", "string-manipulation", "sorting"]
+thumbnailText: "Group Anagrams Explained"
+words: ["anagram", "hashing", "sorting", "categorization", "string", "hash-map", "frequency-array", "canonical-form", "grouping", "leetcode", "python", "java", "cpp", "optimization", "complexity", "key-value", "dictionary", "arrays", "transformation", "clustering"]
+cover: ""
+author: "Agentic AI"
+authorUsername: "Agentic AI"
+authorLinkedIn: "https://www.linkedin.com/in/agentic-ai/"
+modelConfig:
+  visualization: "anthropic/claude-4.5-sonnet"
+  contextGathering:
+    - "openai/gpt-5.1"
+    - "anthropic/claude-4-sonnet"
+    - "google/gemini-3-pro-preview"
+  workflow:
+    synthesis: "google/gemini-3-pro-preview"
+    correction: "google/gemini-3-pro-preview"
+    humanization: "google/gemini-3-pro-preview"
+---
+
+import { injectCode } from "@src/utils/blog-utils";
+import GroupAnagramsHashMap from "@components/examples/49.-group-anagrams/GroupAnagramsHashMap";
+import GroupAnagramsCharacterCount from "@components/examples/49.-group-anagrams/GroupAnagramsCharacterCount";
+import GroupAnagramsComparison from "@components/examples/49.-group-anagrams/GroupAnagramsComparison";
+
+# Group Anagrams: Finding Order in Chaos
+
+The **Group Anagrams** problem is one of those classic interview questions that looks scary at first glance but is actually pretty satisfying once you see the trick. The goal? Take a messy list of words and organize them so that words made of the same letters sit together.
+
+It’s a fantastic problem for learning how to design **keys** for hash maps and how to normalize data into what we call a "canonical form."
+
+If you've ever played Scrabble or solved word jumbles, you've essentially run this algorithm in your head: you look at a pile of letters and realize that "eat", "tea", and "ate" are just different arrangements of the same building blocks.
+
+## Real-World Analogy
+
+<Notation type="box" color="rgba(255, 193, 7, 0.3)" padding={10}>
+**Real-World Analogy**: Think of a **LEGO** set. A LEGO car and a LEGO boat might look completely different, but if you take them apart brick by brick, they might consist of the exact same pile of pieces.
+
+In this problem, that "pile of bricks" is our **canonical form**. We disassemble every word into its base components (letters), and if two words produce the exact same pile, they belong in the same box.
+</Notation>
+
+## The Sorting Approach
+The most intuitive way to handle this? Sort the letters. If you take any anagram and sort its characters alphabetically, they become identical.
+- "eat" $\rightarrow$ "aet"
+- "tea" $\rightarrow$ "aet"
+- "ate" $\rightarrow$ "aet"
+
+By using this sorted string as a **key** in a Hash Map (or Dictionary), we can group all the matching original strings together. It's simple, clean, and easy to explain.
+
+### Interactive Visualization: Hash Map Grouping
+Explore how words are processed, sorted into keys, and stored in the hash map.
+
+<GroupAnagramsHashMap client:load />
+
+## Core Concepts
+
+To crack this efficiently, we need to lean on two main ideas:
+
+1.  **Canonical Representation**: Think of this as a unique ID tag. For anagrams, we need a version of the word that looks exactly the same for every member of the group, but different for anyone else.
+    <Notation type="highlight" color="rgba(255, 235, 59, 0.4)">
+    **Key Concept**: A **Canonical Representation** transforms complex data into a standard format (like a sorted string) so we can easily compare and group things.
+    </Notation>
+
+2.  **Hash Map (Dictionary)**: This is where we store our groups. It gives us lightning-fast lookups ($O(1)$ on average), which is exactly what we need for performance.
+
+## The Frequency Count Approach (Optimization)
+Sorting is the most readable solution, but it isn't always the fastest. It costs $O(K \log K)$ per string (where $K$ is the string length). If you're dealing with massive strings, that math starts to hurt.
+
+A faster (though slightly more complex) way uses **Character Counts**. Since anagrams have the exact same count of every character, we can use the frequency array (e.g., `a:1, b:0, c:0, ..., e:1, ...`) as the key.
+
+### Interactive Visualization: Character Counting
+See how we can generate keys without sorting by counting character frequencies.
+
+<GroupAnagramsCharacterCount client:load />
+
+## Implementation
+
+Here is the implementation using the **Sorting Approach**. I'm sticking with this one because it's the most universal and, honestly, the easiest one to write out on a whiteboard without bugging out. Note that in Python, the dictionary simplifies the logic significantly.
+
+<CodeTabs
+    tabLabels={["Python", "Java", "C++"]}
+    tabs={{
+        'python': injectCode(`
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        # Dictionary to map the sorted string (key) to list of anagrams
+        anagram_map = defaultdict(list)
+        
+        for s in strs:
+            # Create the key by sorting the string
+            # 'eat' -> ['a', 'e', 't'] -> 'aet'
+            key = "".join(sorted(s))
+            
+            # Append the original string to the correct group
+            anagram_map[key].append(s)
+            
+        # Return just the grouped lists (values of the map)
+        return list(anagram_map.values())
+        `),
+        'java': injectCode(`
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        if (strs == null || strs.length == 0) return new ArrayList<>();
+        
+        // Map to store sorted string -> list of anagrams
+        Map<String, List<String>> map = new HashMap<>();
+        
+        for (String s : strs) {
+            // Convert string to char array to sort it
+            char[] ca = s.toCharArray();
+            Arrays.sort(ca);
+            
+            // Create a string key from sorted chars
+            String key = String.valueOf(ca);
+            
+            // If key doesn't exist, initialize new list
+            if (!map.containsKey(key)) {
+                map.put(key, new ArrayList<>());
+            }
+            
+            // Add original string to the list
+            map.get(key).add(s);
+        }
+        
+        return new ArrayList<>(map.values());
+    }
+}
+        `),
+        'cpp': injectCode(`
+class Solution {
+public:
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        // Unordered map for O(1) average lookups
+        unordered_map<string, vector<string>> map;
+        
+        for (string s : strs) {
+            // Create a temporary string to serve as key
+            string key = s;
+            
+            // Sort the key to find canonical form
+            sort(key.begin(), key.end());
+            
+            // Add original string to the vector at this key
+            map[key].push_back(s);
+        }
+        
+        // Collect all values into the result vector
+        vector<vector<string>> result;
+        for (auto& p : map) {
+            // Use reference 'auto& p' to avoid copying the vector
+            result.push_back(p.second);
+        }
+        
+        return result;
+    }
+};
+        `)
+    }}
+/>
+
+## Complexity Analysis
+
+You need to know the trade-offs here, especially if your interviewer asks, "Can we make this faster?"
+
+<GroupAnagramsComparison client:load />
+
+### Time Complexity
+<Notation type="underline" color="blue" strokeWidth={2}>
+**Time Complexity**: $O(N \cdot K \log K)$
+</Notation>
+*   $N$ is the number of strings.
+*   $K$ is the maximum length of a string.
+*   We iterate through $N$ strings, and for each one, we sort it. That sorting step takes $O(K \log K)$.
+*   *Note*: The Character Count approach brings this down to $O(N \cdot K)$, which is better for very long strings.
+
+### Space Complexity
+<Notation type="underline" color="purple" strokeWidth={2}>
+**Space Complexity**: $O(N \cdot K)$
+</Notation>
+*   We have to store every string in our Hash Map.
+*   In the worst case (where there are no anagrams at all), we end up storing $N$ keys and $N$ lists containing the original strings. The total space used matches the total size of the input.
+
+## Common Pitfalls & Edge Cases
+
+I've seen a lot of candidates trip up on these specific edge cases. Watch out for them:
+
+<Notation type="box" color="rgba(244, 67, 54, 0.1)" strokeWidth={1} padding={10}>
+⚠️ **Pitfall (Python)**: Lists are **mutable** and cannot be used as dictionary keys.
+If you use the Character Count approach in Python, you'll get an error if you try to use a list like `[1, 0, 2...]` as a key. You must convert it to a **tuple** `(1, 0, 2...)` first.
+</Notation>
+
+1.  **Empty Inputs**: Make sure you handle `strs = []` or `strs = [""]`. The logic usually handles `[""]` naturally (the key is just an empty string), but an empty list input `[]` might need an early return in some languages.
+2.  **Array Hashing (Java)**: In Java, arrays `int[]` don't hash by their content. If you try to use the count array as a key, it'll use the memory address instead. You have to wrap it in `Arrays.toString()` or a `List` to get it to behave.
+3.  **Case Sensitivity**: LeetCode 49 specifies lowercase English letters, but the real world is messy ("Tea" vs "eat"). In an interview, always ask if you need to normalize case (e.g., `s.toLowerCase()`) before generating the key.
+
+## Practical Applications
+
+Believe it or not, this isn't just a toy problem. This pattern—grouping by a "normalized" key—shows up all over the place:
+
+1.  **Data Deduplication**: Identifying duplicate records that might have fields in different orders (like JSON objects where key order doesn't matter).
+2.  **Fuzzy Search**: Grouping search terms that are just misspellings or variations of each other.
+3.  **Log Aggregation**: Grouping error logs that are identical except for the specific timestamp or ID.
+
+## Conclusion
+
+The "Group Anagrams" problem is really just a lesson in **data transformation**. By converting messy, varied data into a strict **canonical form**, we can use Hash Maps to organize chaos instantly. Whether you choose sorting (for readability) or frequency counting (for raw speed), the core principle is the same: find the hidden structure that similar items share.
+
+<Notation type="circle" color="green" padding={12}>
+💡 **Pro Tip**: In a system design interview, if you're asked to group billions of documents by similarity, this "Canonical Key + Hash Map" pattern is often the first step in a MapReduce job!
+</Notation>

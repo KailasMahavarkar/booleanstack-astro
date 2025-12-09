@@ -1,82 +1,39 @@
-import { Plus } from "lucide-react";
-import React from "react";
-import { useState } from "react";
-
-interface TreeNodeConfig {
-    verticalSpacing?: number;
-    horizontalSpacing?: number;
-    expandable?: boolean;
-    isFullyExpanded?: boolean;
-    delta?: number;
-    size?: number;
-    expandableIconSize?: number;
-    showExpandIcon?: boolean;
-    showLevelColorWithOverride?: boolean;
-    colors: {
-        backgroundColor: string;
-        textColor: string;
-        expandableIconColor: string;
-        expandableIconBackgroundColor: string;
-        parentPathColor: string;
-        leftChildPathColor: string;
-        rightChildPathColor: string;
-        leafBackgroundColor: string;
-        leafTextColor: string;
-        depthColorMap?: Record<number, string>;
-    }
-}
-
-export interface TreeNodeData {
-    value: number;
-    children: TreeNodeData[];
-    currentDepth?: number;
-    xPosition?: number;
-    yPosition?: number;
-    isLeaf?: boolean;
-    isPreviouslyExpanded?: boolean;
-    highlightLeftChildPath?: boolean;
-    highlightRightChildPath?: boolean;
-    highLightParentPath?: boolean;
-    visited?: boolean;
-    config?: TreeNodeConfig,
-}
+import { Minus, Plus, ZoomIn, ZoomOut, Maximize2 } from "lucide-react"
+import { v4 as uuidv4 } from 'uuid'
+import React, { useState, useRef } from "react"
+import { type TreeProps, type ZoomOrigin, type TreeNodeData, type TreeNodeConfig } from "./type"
 
 
-// calculateSubtreeWidth: measures needed width to avoid overlap
 function calculateSubtreeWidth(node: TreeNodeData, spacing: number, size: number): number {
-    if (!node.children || node.children.length === 0) return size;
-    const widths = node.children.map(child => calculateSubtreeWidth(child, spacing, size));
-    return widths.reduce((sum, w) => sum + w, 0) + spacing * (widths.length - 1);
+    if (!node.children || node.children.length === 0) return size
+    const widths = node.children.map((child) => calculateSubtreeWidth(child, spacing, size))
+    return widths.reduce((sum, w) => sum + w, 0) + spacing * (widths.length - 1)
 }
 
-function getNodeClasses(isLeaf: boolean, config: TreeNodeData['config'], currentDepth: number) {
-    if (!config) return "";
-    const commonClasses = 'rounded-full flex justify-center items-center shadow-md cursor-pointer select-none';
-    if (!config) return commonClasses;
-    const bgClasses = isLeaf ? config.colors.leafBackgroundColor : config.colors.backgroundColor;
-    const textClasses = config.colors.textColor;
+function getNodeClasses(isLeaf: boolean, config: TreeNodeData["config"], currentDepth: number) {
+    if (!config) return ""
+    const common = "rounded-full flex justify-center items-center shadow-md cursor-pointer select-none"
+    const bg = isLeaf ? config.colors.leafBackgroundColor : config.colors.backgroundColor
+    const text = isLeaf ? config.colors.leafTextColor : config.colors.textColor
 
-    const colorMap: Record<number, string> = {
-        0: "bg-red-600 hover:bg-red-700",
-        1: "bg-blue-600 hover:bg-blue-700",
-        2: "bg-green-600 hover:bg-green-700",
-        3: "bg-pink-600 hover:bg-pink-700",
-        4: "bg-yellow-600 hover:bg-yellow-700",
+    if (!config.showLevelColorWithOverride) return `${bg} ${text} ${common}`
+
+    const fallback: Record<number, string> = {
+        0: "bg-rose-600",
+        1: "bg-emerald-600",
+        2: "bg-amber-600",
+        3: "bg-fuchsia-600",
+        4: "bg-cyan-600",
     }
-    if (!config.showLevelColorWithOverride) return `${bgClasses} ${textClasses} ${commonClasses}`;
-
-    const depthColorMap = config.colors.depthColorMap || colorMap;
-    const depthColorMapSize = Object.keys(depthColorMap).length;
-    const depthColorClasses = depthColorMap[currentDepth % depthColorMapSize];
-    return `${depthColorClasses} ${commonClasses}`;
+    const map = config.colors.depthColorMap || fallback
+    const color = map[currentDepth % Object.keys(map).length]
+    return `${color} ${text} ${common}`
 }
 
-
-
-const TreeNode = ({
+const TreeNode: React.FC<TreeNodeData> = ({
     value,
     children,
-    currentDepth,
+    currentDepth = 0,
     xPosition = 0,
     yPosition = 0,
     isLeaf = false,
@@ -93,161 +50,396 @@ const TreeNode = ({
         size: 60,
         expandableIconSize: 10,
         showExpandIcon: true,
+        showLevelColorWithOverride: true,
         colors: {
-            backgroundColor: "bg-red-600",
+            backgroundColor: "bg-zinc-800",
             textColor: "text-white",
-            expandableIconColor: "text-black",
+            expandableIconColor: "text-zinc-900",
             expandableIconBackgroundColor: "bg-white",
-            parentPathColor: "red",
-            leftChildPathColor: "blue",
-            rightChildPathColor: "green",
-            leafBackgroundColor: "bg-green-600",
+            parentPathColor: "#7c3aed",
+            leftChildPathColor: "#16a34a",
+            rightChildPathColor: "#f59e0b",
+            leafBackgroundColor: "bg-emerald-600",
             leafTextColor: "text-white",
             depthColorMap: {
-                0: "bg-red-600",
-                1: "bg-blue-600",
-                2: "bg-green-600",
-                3: "bg-yellow-600",
-                4: "bg-purple-600",
+                0: "bg-zinc-800",
+                1: "bg-emerald-600",
+                2: "bg-amber-600",
+                3: "bg-fuchsia-600",
+                4: "bg-cyan-600",
             },
-        }
+        },
     },
-}: TreeNodeData) => {
-    const [isExpanded, setIsExpanded] = useState(isPreviouslyExpanded || (config.isFullyExpanded ?? true));
-    const H_SPACING = config.horizontalSpacing!;
-    const V_SPACING = config.verticalSpacing!;
-    const NODE_SIZE = config.size!;
-    // calculate widths for each child subtree
-    const childWidths = children.map(child =>
-        calculateSubtreeWidth(child, H_SPACING, NODE_SIZE)
-    );
+}) => {
+    const [isExpanded, setIsExpanded] = useState(isPreviouslyExpanded || (config.isFullyExpanded ?? true))
+    const H_SPACING = config.horizontalSpacing!
+    const V_SPACING = config.verticalSpacing!
+    const NODE_SIZE = config.size!
 
-    const totalWidth = childWidths.reduce((sum, w) => sum + w, 0) + H_SPACING * (childWidths.length - 1);
-    let currX = xPosition - totalWidth / 2;
+    const childWidths = children.map((child) => calculateSubtreeWidth(child, H_SPACING, NODE_SIZE))
+    const totalWidth = childWidths.reduce((sum, w) => sum + w, 0) + H_SPACING * Math.max(0, childWidths.length - 1)
+    let currX = xPosition - totalWidth / 2
 
     const positionedChildren: TreeNodeData[] = children.map((child, idx) => {
-        const isSpecialCaseForLeft = children.length === 1 && children[0].children.length === 0;
-
-        const w = childWidths[idx];
-        const childX = currX + w / 2;
-        currX += w + H_SPACING;
+        const w = childWidths[idx]
+        const childX = currX + w / 2
+        currX += w + H_SPACING
+        const singleLeaf = children.length === 1 && children[0].children.length === 0
         return {
             ...child,
             config,
-            xPosition: isSpecialCaseForLeft ? childX - H_SPACING + w : childX,
+            xPosition: singleLeaf ? childX - H_SPACING + w : childX,
             yPosition: yPosition + V_SPACING,
-            currentDepth: (currentDepth ?? 0) + 1,
+            currentDepth: currentDepth + 1,
             isLeaf: child.children.length === 0,
             isPreviouslyExpanded: child.isPreviouslyExpanded,
             highLightParentPath: child.highLightParentPath,
-        };
-    });
-
-
-    const getExpandableStatus = (): boolean => {
-        if (!config.isFullyExpanded && !config.expandable) return false;
-        if (config.expandable && !isExpanded) return false;
-        if (config.expandable && isExpanded) return true;
-        return true;
-    }
-
-    const getExpandableIconStatus = (): boolean => {
-        // if its fully expanded but not expandable then icon is hidden
-        if (config.isFullyExpanded && !config.expandable) return false;
-
-        // if its expandable and not expanded then icon is shown
-        if (config.expandable && !isExpanded) return true;
-
-        // if its expandable and expanded then icon is hidden
-        if (config.expandable && isExpanded) return false;
-        return false;
-    }
-
-
-    const handleNodeClick = () => {
-        if (config.expandable) {
-            setIsExpanded(prev => !prev);
         }
-    }
+    })
+
+    const hasChildren = positionedChildren.length > 0
+    const expanded = config.expandable ? isExpanded : !!config.isFullyExpanded
+    const showExpandBtn = !!(config.showExpandIcon && config.expandable && hasChildren)
 
     return (
         <>
             <div
                 style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: `${yPosition}px`,
                     left: `${xPosition}px`,
-                    transform: 'translate(-50%, -50%)',
+                    transform: "translate(-50%, -50%)",
                     width: `${config.size}px`,
                     height: `${config.size}px`,
-                    border: visited ? '1px solid yellow' : 'none',
+                    border: visited ? "1px solid #fde047" : "1px solid rgba(0,0,0,0.1)",
+                    zIndex: 1,
+                    backgroundColor: !config.showLevelColorWithOverride ? (isLeaf ? "#059669" : "#111827") : undefined,
+                    color: !config.showLevelColorWithOverride ? "#ffffff" : undefined,
                 }}
-                className={getNodeClasses(isLeaf, config, currentDepth || 0)}
-                onClick={handleNodeClick}
+                className={getNodeClasses(isLeaf, config, currentDepth)}
+                onClick={() => {
+                    if (config.expandable && hasChildren) setIsExpanded((p) => !p)
+                }}
+                role="button"
+                aria-expanded={expanded}
+                aria-label={`Tree node value ${value}`}
             >
                 {value}
-                {
-                    config.showExpandIcon && getExpandableIconStatus() && !isLeaf && (
-                        <>
-                            <Plus
-                                width={config.expandableIconSize ?? 10}
-                                height={config.expandableIconSize ?? 10}
+                {showExpandBtn && !isLeaf && (
+                    <>
+                        {expanded ? (
+                            <Minus
+                                width={config.expandableIconSize ?? 12}
+                                height={config.expandableIconSize ?? 12}
+                                className="border border-zinc-800 bg-white text-zinc-900 rounded-full opacity-70"
                                 style={{
-                                    position: 'absolute',
+                                    position: "absolute",
                                     bottom: 0,
-                                    left: (config.size ?? 60) / 2 - (config.expandableIconSize ?? 10) / 2,
-                                    transform: 'translate(0, 50%)',
+                                    left: (config.size ?? 60) / 2 - (config.expandableIconSize ?? 12) / 2,
+                                    transform: "translate(0, 50%)",
                                 }}
-                                className="border-[1px] border-black bg-white text-black rounded-full opacity-60"
                             />
-                        </>
-                    )
-                }
+                        ) : (
+                            <Plus
+                                width={config.expandableIconSize ?? 12}
+                                height={config.expandableIconSize ?? 12}
+                                className="border border-zinc-800 bg-white text-zinc-900 rounded-full opacity-70"
+                                style={{
+                                    position: "absolute",
+                                    bottom: 0,
+                                    left: (config.size ?? 60) / 2 - (config.expandableIconSize ?? 12) / 2,
+                                    transform: "translate(0, 50%)",
+                                }}
+                            />
+                        )}
+                    </>
+                )}
             </div>
 
-            {getExpandableStatus() && positionedChildren.length > 0 && positionedChildren.map((child, index) => {
-                if (!child.xPosition) return null;
+            {expanded &&
+                hasChildren &&
+                positionedChildren.map((child, index) => {
+                    if (child.xPosition == null) return null
+                    let strokeColor = config.colors.strokeColor || "#111827"
+                    if (child.highLightParentPath) {
+                        strokeColor = config.colors.parentPathColor
+                    } else {
+                        if (highlightLeftChildPath && index === 0) strokeColor = config.colors.leftChildPathColor
+                        if (highlightRightChildPath && index === positionedChildren.length - 1)
+                            strokeColor = config.colors.rightChildPathColor
+                    }
 
-                let strokeColor = 'black';
-                if (child.highLightParentPath) {
-                    strokeColor = config.colors.parentPathColor;
-                } else {
-                    if (highlightLeftChildPath && index === 0) strokeColor = config.colors.leftChildPathColor;
-                    if (highlightRightChildPath && index === positionedChildren.length - 1) strokeColor = config.colors.rightChildPathColor;
-                }
-
-                return (
-                    <React.Fragment key={`${child.value}-${index}`}>
-                        <svg
-                            style={{
-                                position: 'absolute',
-                                overflow: 'visible',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                height: '100%',
-                                zIndex: -1
-                            }}
-                        >
-                            <line
-                                x1={xPosition}
-                                y1={yPosition}
-                                x2={child.xPosition}
-                                y2={child.yPosition}
-                                stroke={strokeColor}
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                        <TreeNode
-                            key={`${child.value}-${index}`}
-                            {...child}
-                        />
-                    </React.Fragment>
-                )
-            })}
+                    return (
+                        <div key={uuidv4()}>
+                            <div style={{ height: '1px', width: '1px' }} />
+                            <svg
+                                style={{
+                                    position: "absolute",
+                                    overflow: "visible",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    height: "100%",
+                                    zIndex: 0,
+                                }}
+                                aria-hidden
+                            >
+                                <line
+                                    x1={xPosition}
+                                    y1={yPosition}
+                                    x2={child.xPosition}
+                                    y2={child.yPosition}
+                                    stroke={strokeColor}
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <TreeNode key={`${child.value}-${index}`} {...child} />
+                        </div>
+                    )
+                })}
         </>
-    );
-};
+    )
+}
 
-export default TreeNode;
+const Tree: React.FC<TreeProps> = ({
+    // Container props
+    width = "100%",
+    height = "600px",
+    allowCanvas = false,
+    containerClassName = "",
+    containerStyle = {},
+
+    // Zoom props
+    initialZoom = 1,
+    minZoom = 0.3,
+    maxZoom = 3,
+    zoomStep = 0.2,
+
+    // Tree props
+    value,
+    children,
+    currentDepth = 0,
+    xPosition,
+    yPosition,
+    isLeaf = false,
+    isPreviouslyExpanded = false,
+    highlightLeftChildPath = false,
+    highlightRightChildPath = false,
+    highLightParentPath = false,
+    visited = false,
+    config,
+}) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [isPanning, setPanning] = useState(false)
+    const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+    const [zoom, setZoom] = useState(initialZoom)
+    const [zoomOrigin, setZoomOrigin] = useState<ZoomOrigin>('center')
+    const panStart = useRef({ x: 0, y: 0 })
+
+
+    // Calculate container dimensions for positioning
+    const containerWidth = typeof width === 'number' ? width : 800
+
+    // If no position is provided, center the tree at top
+    const defaultX = typeof containerWidth === 'number' ? containerWidth / 2 : 400
+    const defaultY = 100
+    const treeX = xPosition ?? defaultX
+    const treeY = yPosition ?? defaultY
+
+    // Pan handlers
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!allowCanvas) return
+        setPanning(true)
+        panStart.current = {
+            x: e.clientX - panOffset.x,
+            y: e.clientY - panOffset.y
+        }
+    }
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!allowCanvas || !isPanning) return
+        setPanOffset({
+            x: e.clientX - panStart.current.x,
+            y: e.clientY - panStart.current.y
+        })
+    }
+
+    const handleMouseUp = () => {
+        setPanning(false)
+    }
+
+    const handleMouseLeave = () => {
+        setPanning(false)
+    }
+
+    // Zoom controls
+    const handleZoomIn = () => {
+        const newZoom = Math.min(maxZoom, zoom + zoomStep)
+        setZoom(newZoom)
+    }
+
+    const handleZoomOut = () => {
+        const newZoom = Math.max(minZoom, zoom - zoomStep)
+        setZoom(newZoom)
+    }
+
+    const handleReset = () => {
+        setPanOffset({ x: 0, y: 0 })
+        setZoom(initialZoom)
+    }
+
+    // Get transform origin based on selected option
+    const getTransformOrigin = () => {
+        switch (zoomOrigin) {
+            case 'topleft': return 'top left'
+            case 'topright': return 'top right'
+            case 'bottomleft': return 'bottom left'
+            case 'bottomright': return 'bottom right'
+            case 'center':
+            default: return 'center'
+        }
+    }
+
+    // Merge default config with provided config
+    const defaultConfig: TreeNodeConfig = {
+        verticalSpacing: 120,
+        horizontalSpacing: 120,
+        delta: 0,
+        expandable: true,
+        isFullyExpanded: true,
+        size: 60,
+        expandableIconSize: 10,
+        showExpandIcon: true,
+        showLevelColorWithOverride: true,
+        colors: {
+            backgroundColor: "bg-zinc-800",
+            textColor: "text-white",
+            expandableIconColor: "text-zinc-900",
+            expandableIconBackgroundColor: "bg-white",
+            parentPathColor: "#7c3aed",
+            leftChildPathColor: "#16a34a",
+            rightChildPathColor: "#f59e0b",
+            leafBackgroundColor: "bg-emerald-600",
+            leafTextColor: "text-white",
+            depthColorMap: {
+                0: "bg-zinc-800",
+                1: "bg-emerald-600",
+                2: "bg-amber-600",
+                3: "bg-fuchsia-600",
+                4: "bg-cyan-600",
+            },
+        },
+    }
+
+    const mergedConfig = config ? { ...defaultConfig, ...config } : defaultConfig
+
+    const containerClasses = `
+        relative overflow-hidden bg-slate-50
+        ${allowCanvas ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}
+        ${containerClassName}
+    `
+
+    const showControls = allowCanvas && (panOffset.x !== 0 || panOffset.y !== 0 || zoom !== initialZoom)
+
+    return (
+        <div
+            ref={containerRef}
+            className={containerClasses}
+            style={{
+                width,
+                height,
+                ...containerStyle
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+        >
+            <div
+                style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    transform: allowCanvas
+                        ? `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`
+                        : `scale(${zoom})`,
+                    transformOrigin: getTransformOrigin(),
+                    transition: isPanning ? 'none' : 'transform 0.2s ease-out'
+                }}
+            >
+                <TreeNode
+                    value={value}
+                    currentDepth={currentDepth}
+                    xPosition={treeX}
+                    yPosition={treeY}
+                    isLeaf={isLeaf}
+                    isPreviouslyExpanded={isPreviouslyExpanded}
+                    highlightLeftChildPath={highlightLeftChildPath}
+                    highlightRightChildPath={highlightRightChildPath}
+                    highLightParentPath={highLightParentPath}
+                    visited={visited}
+                    config={mergedConfig}
+                >
+                    {children}
+                </TreeNode>
+            </div>
+
+            {/* Controls Panel */}
+            {allowCanvas && (
+                <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                    {/* Zoom Controls */}
+                    <div className="flex gap-1 bg-white border border-gray-300 rounded shadow-sm p-1">
+                        <button
+                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                            onClick={handleZoomOut}
+                            title="Zoom Out"
+                            disabled={zoom <= minZoom}
+                        >
+                            <ZoomOut size={18} className={zoom <= minZoom ? 'text-gray-300' : 'text-gray-700'} />
+                        </button>
+                        <div className="px-2 py-1.5 text-xs font-medium text-gray-700 min-w-[50px] text-center">
+                            {Math.round(zoom * 100)}%
+                        </div>
+                        <button
+                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                            onClick={handleZoomIn}
+                            title="Zoom In"
+                            disabled={zoom >= maxZoom}
+                        >
+                            <ZoomIn size={18} className={zoom >= maxZoom ? 'text-gray-300' : 'text-gray-700'} />
+                        </button>
+                    </div>
+
+                    {/* Zoom Origin Selector */}
+                    <select
+                        value={zoomOrigin}
+                        onChange={(e) => setZoomOrigin(e.target.value as ZoomOrigin)}
+                        className="bg-white border border-gray-300 rounded shadow-sm px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        title="Zoom Origin"
+                    >
+                        <option value="center">Center</option>
+                        <option value="topleft">Top Left</option>
+                        <option value="topright">Top Right</option>
+                        <option value="bottomleft">Bottom Left</option>
+                        <option value="bottomright">Bottom Right</option>
+                    </select>
+
+                    {/* Reset Button */}
+                    {showControls && (
+                        <button
+                            className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-300 rounded shadow-sm text-xs hover:bg-gray-50"
+                            onClick={handleReset}
+                            title="Reset View"
+                        >
+                            <Maximize2 size={14} />
+                            <span>Reset</span>
+                        </button>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default Tree
